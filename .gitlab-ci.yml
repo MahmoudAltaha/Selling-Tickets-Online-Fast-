@@ -1,0 +1,18 @@
+image: openjdk:17
+
+build:
+  stage: build
+  script:
+    - ./gradlew jar
+  artifacts:
+    paths:
+      - out/cli.jar
+
+test:
+  stage: test
+  allow_failure: true
+  script:
+    - ./gradlew test
+  artifacts:
+    reports:
+      junit: build/test-results/test/**/TEST-*.xml

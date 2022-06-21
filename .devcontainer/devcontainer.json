@@ -1,0 +1,36 @@
+{
+	"name": "Java",
+	"build": {
+		"dockerfile": "Dockerfile",
+		"args": {
+			"VARIANT": "17-bullseye",
+			"INSTALL_MAVEN": "false",
+			"INSTALL_GRADLE": "true"
+		}
+	},
+
+	"settings": { 
+		"java.jdt.ls.java.home": "/docker-java-home"
+	},
+	
+	"extensions": [
+		// Required for Java language support.
+		"vscjava.vscode-java-pack",
+		// Required for interfacing with Gradle.
+		"richardwillis.vscode-gradle-extension-pack",
+		// Required for the execution of `.http` files.
+		"humao.rest-client",
+		// Required for spellchecking.
+		"streetsidesoftware.code-spell-checker"
+	],
+
+	"forwardPorts": [8585],
+
+	"postCreateCommand": "java -version",
+
+	"remoteUser": "vscode",
+
+	"features": {
+		"python": "latest"
+	}
+}

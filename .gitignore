@@ -1,0 +1,20 @@
+
+# Build Artifacts
+.gradle
+build
+bin
+out
+
+# IntelliJ
+.idea
+
+# Eclipse
+.classpath
+.project
+.settings/*
+!.settings/org.eclipse.jdt.core.prefs
+
+# VS Code
+.vscode/*
+!.vscode/launch.json
+!.vscode/cspell.json
