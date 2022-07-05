@@ -31,7 +31,7 @@ public class Database {
      */
     public int getNumAvailable() {
 
-        //nothing
+        
         throw new RuntimeException("Not implemented!");
     }
 
@@ -59,4 +59,5 @@ public class Database {
     public void deallocate(final Iterable<Ticket> tickets) {
         throw new RuntimeException("Not implemented!");
     }
+    // Mohamad
 }
