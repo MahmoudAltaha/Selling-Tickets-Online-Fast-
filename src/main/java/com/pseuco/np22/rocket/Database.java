@@ -30,6 +30,8 @@ public class Database {
      * @return The number of tickets available in the database.
      */
     public int getNumAvailable() {
+
+        //nothing
         throw new RuntimeException("Not implemented!");
     }
 
