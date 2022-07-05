@@ -5,6 +5,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+
 /**
  * <p>
  * A channel for messages of type {@code M} with two priorities.
@@ -33,7 +34,13 @@ public class Mailbox<M> {
      * @return Whether the mailbox is empty.
      */
     public boolean isEmpty() {
-        return (LowMailBox.isEmpty() && HighMailBox.isEmpty());
+        MailboxLock.lock();
+        try{
+            return (LowMailBox.isEmpty() && HighMailBox.isEmpty());
+        }finally{
+            MailboxLock.unlock();
+        }
+        
     }
 
     /**
@@ -43,7 +50,16 @@ public class Mailbox<M> {
      * @return Indicates whether the message has been sent.
      */
     public boolean sendLowPriority(M message) {
-        return LowMailBox.add(message);
+        MailboxLock.lock();
+        try{
+            boolean messageAdd = LowMailBox.add(message);
+            IsMailboxFreeToAccess.signal();
+            return messageAdd;
+
+        }finally{
+            MailboxLock.unlock();
+        }
+        
     }
 
     /**
@@ -53,7 +69,16 @@ public class Mailbox<M> {
      * @return Indicates whether the message has been sent.
      */
     public boolean sendHighPriority(M message) {
-        return HighMailBox.add(message);
+        MailboxLock.lock();
+        try{
+            boolean messageAdd = HighMailBox.add(message);
+            IsMailboxFreeToAccess.signal();
+            return messageAdd;
+
+        }finally{
+            MailboxLock.unlock();
+        }
+        
     }
 
     /**
@@ -69,17 +94,26 @@ public class Mailbox<M> {
      * @throws InterruptedException The thread has been interrupted.
      */
     public M recv() throws InterruptedException {
-        M message = null;
-        try {
-            if (HighMailBox.size() > 0) {
-                message = HighMailBox.poll();
-            } else if (LowMailBox.size() > 0) {
-                message = LowMailBox.poll();
+        MailboxLock.lock();
+        try{
+            while((LowMailBox.isEmpty() && HighMailBox.isEmpty())){
+                IsMailboxFreeToAccess.await();
             }
-        } catch (Exception InterruptedException) {
+            M message = null;
+            try {
+                if (HighMailBox.size() > 0) {
+                    message = HighMailBox.poll();
+                } else if (LowMailBox.size() > 0) {
+                    message = LowMailBox.poll();
+                }
+            } catch (Exception InterruptedException) {
             return null;
+            }
+            return message;
+        }finally{
+            MailboxLock.unlock();
         }
-        return message;
+        
     }
 
     /**
@@ -94,40 +128,21 @@ public class Mailbox<M> {
      * @return The received message or {@code null} in case the {@link Mailbox} is empty.
      */
     public M tryRecv() {
-        M message = null;
-        try {
-            if (HighMailBox.size() > 0) {
-                message = HighMailBox.poll();
-            } else if (LowMailBox.size() > 0) {
-                message = LowMailBox.poll();
-            }
-        } catch (Exception InterruptedException) {
-            return null;
-        }
-        return message;
-    }
-
-    /**
-     * Lock MailBox of Low priority
-     */
-    public void MailboxLock() {
         MailboxLock.lock();
-        ;
+        try{
+            M message = null;
+             try {
+                if (HighMailBox.size() > 0) {
+                    message = HighMailBox.poll();
+                }else if (LowMailBox.size() > 0) {
+                    message = LowMailBox.poll();
+                }
+                return message;
+            } catch (Exception InterruptedException) {
+            return null;
+            }
+        }finally{
+            MailboxLock.unlock();
+        }
     }
-
-    /**
-     * Unlock MailBox of Low priority
-     */
-    public void MailboxUnLock() {
-        MailboxLock.unlock();
-        ;
-    }
-
-    /**
-     * get Condition MailBox of Low priority
-     */
-    public Condition IsMailboxFreeToAccess() {
-        return IsMailboxFreeToAccess;
-    }
-
 }
