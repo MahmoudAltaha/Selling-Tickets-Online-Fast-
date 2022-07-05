@@ -331,7 +331,10 @@ public class Request {
      * @param data The data to send to the client.
      */
     public void respond(final int code, final String data) {
-        assert !this.responseSent : "A response has already been sent.";
+        if (this.responseSent) {
+            System.err.println("A response has been sent more than once. Terminating!");
+            System.exit(1);
+        }
         this.responseSent = true;
 
         final var bytes = data.getBytes();
