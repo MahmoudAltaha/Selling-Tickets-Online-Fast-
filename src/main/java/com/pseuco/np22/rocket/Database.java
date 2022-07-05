@@ -17,7 +17,6 @@ public class Database {
     private final List<Ticket> unallocated = new ArrayList<>();
 
     private Lock ticketLock; // lock for safe access/leave to the tickets
-    private Condition isThereAcsesstoTicket; // Cheak if there is someone cheacking or changing tickets
     private int numAvailable; // the number of tickets available
 
     /**
@@ -31,7 +30,6 @@ public class Database {
             this.unallocated.add(new Ticket(id));
         }
         this.ticketLock = new ReentrantLock();
-        this.isThereAcsesstoTicket = ticketLock.newCondition();
         this.numAvailable = coordinator.getConfig().getNumTickets();
     }
 
@@ -41,7 +39,12 @@ public class Database {
      * @return The number of tickets available in the database.
      */
     public int getNumAvailable() {
-        return numAvailable;
+        ticketLock.lock();
+        try{
+            return numAvailable;
+        }finally{
+            ticketLock.unlock();
+        }
     }
 
     /**
@@ -57,30 +60,36 @@ public class Database {
      * @return A list of allocated tickets.
      */
     public List<Ticket> allocate(final int numTickets) {
-        List<Ticket> AllocatedTickets = new ArrayList<>();
-        Ticket ticket = null;
-        // if there is no tickets in Data Base
-        if (numAvailable == 0) {
-            return new ArrayList<>();
-            // if there are tickets in Data Base as I asked
-        } else if (numTickets <= numAvailable) {
-            for (int i = 0; i < numTickets; i++) {
-                ticket = unallocated.get(0);
-                unallocated.remove(0);
-                numAvailable--;
-                AllocatedTickets.add(ticket);
+        ticketLock.lock();
+        try{
+            List<Ticket> AllocatedTickets = new ArrayList<>();
+            Ticket ticket = null;
+        
+            // if there is no tickets in Data Base
+            if (numAvailable == 0) {
+                return AllocatedTickets;
+                // if there are tickets in Data Base as I asked
+            } else if (numTickets <= numAvailable) {    
+             for (int i = 0; i < numTickets; i++) {
+                 ticket = unallocated.get(0);
+                 unallocated.remove(0);
+                 numAvailable--;
+                 AllocatedTickets.add(ticket);
+                }
+               return AllocatedTickets;
+               // if there are tickets but not as I asked
+            } else {
+             for (int i = 0; i < numAvailable; i++) {
+                   ticket = unallocated.get(0);
+                   unallocated.remove(0);
+                   numAvailable--;
+                  AllocatedTickets.add(ticket);
+                }
+             return AllocatedTickets;
             }
-            return AllocatedTickets;
-            // if there are tickets but not as I asked
-        } else {
-            for (int i = 0; i < numAvailable; i++) {
-                ticket = unallocated.get(0);
-                unallocated.remove(0);
-                numAvailable--;
-                AllocatedTickets.add(ticket);
-            }
-            return AllocatedTickets;
-        }
+        }finally{
+            ticketLock.unlock();
+        }  
     }
 
     /**
@@ -89,31 +98,17 @@ public class Database {
      * @param tickets The tickets to return to the database.
      */
     public void deallocate(final Iterable<Ticket> tickets) {
-        // add all tickets in unallocated List
-        tickets.forEach((ticket) -> {
-            unallocated.add(ticket);
-            numAvailable++;
-        });
-    }
-
-    /**
-     * get condition
-     */
-    public Condition getIsFreeToTicket() {
-        return isThereAcsesstoTicket;
-    }
-
-    /**
-     * lock for safe access/leave to the tickets
-     */
-    public void TicketLock() {
         ticketLock.lock();
-    }
+        try{
+             // add all tickets in unallocated List
+            tickets.forEach((ticket) -> {
+                unallocated.add(ticket);
+                numAvailable++;
+            });
 
-    /**
-     * unlock for safe access/leave to the tickets
-     */
-    public void TicketUnlock() {
-        ticketLock.unlock();
+        }finally{
+            ticketLock.unlock();
+        }
+       
     }
 }
