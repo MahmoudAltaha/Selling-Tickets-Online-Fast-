@@ -2,7 +2,6 @@ use std::path::PathBuf;
 
 use api::Api;
 use clap::Parser;
-use color_eyre::Help;
 use logger::LoggerRef;
 use reqwest::Url;
 use tests::all_tests;
@@ -33,9 +32,9 @@ async fn main() -> eyre::Result<()> {
 
     let args = Arguments::parse();
 
-    let jar = tokio::fs::canonicalize(&args.jar)
-        .await
-        .with_suggestion(|| "Check whether the file exists.")?;
+    if !args.jar.is_file() {
+        return Err(eyre::eyre!("JAR file does not exist!"));
+    }
 
     let logger = LoggerRef::new();
 
@@ -46,7 +45,7 @@ async fn main() -> eyre::Result<()> {
         let result = test_case
             .run(
                 logger.clone(),
-                jar.to_owned(),
+                args.jar.clone(),
                 api.clone(),
                 args.bonus.unwrap_or(false),
             )

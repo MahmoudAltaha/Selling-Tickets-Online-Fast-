@@ -57,7 +57,14 @@ impl<'cx> Launcher<'cx> {
     }
 
     pub async fn launch(mut self) -> Result<RocketRef> {
-        let child = self.cmd.spawn()?;
+        let mut child = self.cmd.spawn()?;
+
+        // Give the system some time to start.
+        sleep(Duration::from_millis(200)).await;
+
+        if let Ok(status) = child.wait().await {
+            eprintln!("Java exited pre-maturely with status code {}.", status);
+        }
 
         let rocket = RocketRef(Arc::new(RocketShared {
             child: tokio::sync::Mutex::new(child),
@@ -65,8 +72,6 @@ impl<'cx> Launcher<'cx> {
 
         self.ctx.register_rocket(rocket.clone());
 
-        // Give the system some time to start.
-        sleep(Duration::from_millis(200)).await;
         Ok(rocket)
     }
 }
