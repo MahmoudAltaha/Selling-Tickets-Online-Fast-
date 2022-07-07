@@ -4,6 +4,7 @@
 build
 bin
 out
+target
 
 # IntelliJ
 .idea
