@@ -1,0 +1,23 @@
+[package]
+name = "tester"
+description = "Tester for the concurrent programming project."
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+clap = { version = "3.1", features = ["derive", "cargo"] }
+serde = { version = "^1", features = ["derive"] }
+serde_json = "^1"
+tokio = { version = "^1.18", features = ["full"] }
+reqwest = { version = "^0.11", features = ["json"] }
+eyre = "^0.6.8"
+color-eyre = "^0.6.1"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+uuid = { version = "1.0", features = ["serde", "v4"] }
+async-trait = "0.1"
+parking_lot = { version = "0.12", features = ["serde"] }
+thiserror = "1.0"
+rand = "0.8"
+futures = "0.3"
