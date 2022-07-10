@@ -1,5 +1,7 @@
 package com.pseuco.np22.rocket;
 
+import javax.swing.plaf.basic.BasicTreeUI.TreeCancelEditingAction;
+
 import com.pseuco.np22.request.Request;
 import com.pseuco.np22.request.ServerId;
 
@@ -22,6 +24,8 @@ public class Server implements Runnable {
      */
     private final Mailbox<Command<Server>> mailbox = new Mailbox<>();
 
+    private boolean active;
+
     /**
      * Constructs a new {@link Server}.
      * 
@@ -31,6 +35,7 @@ public class Server implements Runnable {
     public Server(ServerId id, Coordinator coordinator) {
         this.id = id;
         this.coordinator = coordinator;
+        active = true;
     }
 
     /**
@@ -40,6 +45,22 @@ public class Server implements Runnable {
      */
     public Mailbox<Command<Server>> getMailbox() {
         return this.mailbox;
+    }
+
+    /**
+     * Return the status of the server (active or not)
+     * 
+     * @return The {@link active}
+     */
+    public boolean isActive() {
+        return active;
+    }
+
+    /**
+     * set the status of the Server to non active
+     */
+    public void deactivateServer() {
+        active = false;
     }
 
     @Override

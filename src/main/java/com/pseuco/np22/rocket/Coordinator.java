@@ -1,6 +1,9 @@
 package com.pseuco.np22.rocket;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 import com.pseuco.np22.Config;
 import com.pseuco.np22.request.ServerId;
@@ -28,6 +31,31 @@ public class Coordinator {
      * The estimator of the system.
      */
     protected final Estimator estimator;
+
+    /**
+     * a Map that contains all active servers we have.
+     */
+    private final HashMap<ServerId, Server> activeServers = new HashMap<ServerId, Server>();
+    /**
+     * a Map that contains all terminated servers.
+     */
+    private final HashMap<ServerId, Server> terminatedServers = new HashMap<ServerId, Server>();
+    /**
+     * a Map that contains all servers we have.
+     */
+    private final HashMap<ServerId, Server> allServers = new HashMap<ServerId, Server>();
+    /**
+     * a List that contains the ID of all active servers we have.
+     */
+    private final List<ServerId> activeServersIDs = new ArrayList<ServerId>();
+    /**
+     * a List that contains the ID of all terminated servers.
+     */
+    private final List<ServerId> terminatedServersIDs = new ArrayList<ServerId>();
+    /**
+     * a List that contains the ID of all servers we have.
+     */
+    private final List<ServerId> allServersIDs = new ArrayList<ServerId>();
 
     /**
      * Constructs a new {@link Coordinator}.
@@ -75,7 +103,7 @@ public class Coordinator {
      * @return The mailbox of the server with the given id.
      */
     public Mailbox<Command<Server>> getServerMailbox(ServerId serverId) {
-        throw new RuntimeException("Not implemented!");
+        return allServers.get(serverId).getMailbox();
     }
 
     /**
@@ -90,7 +118,11 @@ public class Coordinator {
      * @return The id of the randomly picked server.
      */
     public ServerId pickRandomServer() {
-        throw new RuntimeException("Not implemented!");
+        Random r = new Random();
+        // Obtain a random number between [0 , (activeServersIDs.size()-1) ].
+        int randomNumber = r.nextInt(activeServersIDs.size());
+        // since the list also start from 0 , we don't have to add 1 to the result.
+        return activeServersIDs.get(randomNumber);
     }
 
     /**
@@ -106,7 +138,12 @@ public class Coordinator {
      * @param serverId The id of the server to remove.
      */
     public void removeServer(ServerId serverId) {
-        throw new RuntimeException("Not implemented!");
+        Server removedServer = activeServers.remove(serverId); // remove the server from the activeServers Map
+        removedServer.deactivateServer(); // set the status of the Server to non-active so he knows that he should
+                                          // terminate.
+        activeServersIDs.remove(serverId); // remove the id from the activeServerIds List
+        terminatedServers.put(serverId, removedServer); // add the removed Server to the terminatedServer Map
+        terminatedServersIDs.add(serverId); // add the removed Server to the terminatedServer List
     }
 
     /**
@@ -121,7 +158,14 @@ public class Coordinator {
      * @return The id of the new server.
      */
     public ServerId createServer() {
-        throw new RuntimeException("Not implemented!");
+        ServerId id = ServerId.generate(); // create new serverID
+        Server newServer = new Server(id, this); // create new Server with the generated id
+        // add the new server to the HashMap/List of active server/ServerID
+        activeServers.put(id, newServer);
+        allServers.put(id, newServer);
+        activeServersIDs.add(id);
+        allServersIDs.add(id);
+        return id; // return the id of the created server
     }
 
     /**
@@ -131,7 +175,31 @@ public class Coordinator {
      * @return The number of servers.
      */
     public int scale(int numServers) {
-        throw new RuntimeException("Not implemented!");
+        // if there are no servers yet created (beginn fo the system) the create the servers
+        // according to the giving number.
+        if (activeServers.isEmpty()) {
+            for (int i = 0; i < numServers; i++) {
+                createServer();
+            }
+            // if the number of wished servers are bigger than the current active servers we have then
+            // create the servers we still need
+        } else if (numServers > activeServers.size()) {
+            int numOfServersToCreate = numServers - activeServers.size();
+            for (int i = 0; i < numOfServersToCreate; i++) {
+                createServer();
+            }
+        }
+        // if the number of wished servers are smaller than the current active servers we have
+        // then remove the servers we do not want
+        // for easy work we do not pick randomly we just remove the first server we get from the
+        // list of active servers.
+        else if (numServers < activeServers.size()) {
+            int numOfServersToRemove = numServers - activeServers.size();
+            for (int i = 0; i < numOfServersToRemove; i++) {
+                removeServer(activeServersIDs.get(0));
+            }
+        }
+        return numServers;
     }
 
     /**
@@ -140,7 +208,7 @@ public class Coordinator {
      * @return The number of active (non-terminating) servers.
      */
     public int getNumOfServers() {
-        throw new RuntimeException("Not implemented!");
+        return activeServers.size();
     }
 
     /**
@@ -149,7 +217,7 @@ public class Coordinator {
      * @return A list of {@link ServerId} of the active servers.
      */
     public List<ServerId> getActiveServerIds() {
-        throw new RuntimeException("Not implemented!");
+        return activeServersIDs;
     }
 
     /**
@@ -165,6 +233,6 @@ public class Coordinator {
      * @return A list of {@link ServerId} of the all servers.
      */
     public List<ServerId> getAllServerIds() {
-        throw new RuntimeException("Not implemented!");
+        return allServersIDs;
     }
 }
