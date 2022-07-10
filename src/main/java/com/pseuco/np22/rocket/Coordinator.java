@@ -175,24 +175,30 @@ public class Coordinator {
      * @return The number of servers.
      */
     public int scale(int numServers) {
-        // if there are no servers yet created (beginn fo the system) the create the servers
-        // according to the giving number.
+        /*
+         * if there are no servers yet created (beginn fo the system) the create the servers
+         * according to the giving number.
+         */
         if (activeServers.isEmpty()) {
             for (int i = 0; i < numServers; i++) {
                 createServer();
             }
-            // if the number of wished servers are bigger than the current active servers we have then
-            // create the servers we still need
+            /*
+             * if the number of wished servers are bigger than the current active servers we have then
+             * create the servers we still need
+             */
         } else if (numServers > activeServers.size()) {
             int numOfServersToCreate = numServers - activeServers.size();
             for (int i = 0; i < numOfServersToCreate; i++) {
                 createServer();
             }
         }
-        // if the number of wished servers are smaller than the current active servers we have
-        // then remove the servers we do not want
-        // for easy work we do not pick randomly we just remove the first server we get from the
-        // list of active servers.
+        /*
+         * if the number of wished servers are smaller than the current active servers we have
+         * then remove the servers we do not want
+         * for easy work we do not pick randomly we just remove the first server we get from the
+         * list of active servers.
+         */
         else if (numServers < activeServers.size()) {
             int numOfServersToRemove = numServers - activeServers.size();
             for (int i = 0; i < numOfServersToRemove; i++) {
