@@ -2,6 +2,8 @@ package com.pseuco.np22.rocket;
 
 import com.pseuco.np22.request.Request;
 import com.pseuco.np22.request.RequestHandler;
+import com.pseuco.np22.request.ServerId;
+import com.pseuco.np22.rocket.Server.MsgProcessRequest;
 
 /**
  * <p>
@@ -53,31 +55,42 @@ public class Balancer implements RequestHandler {
                 switch (request.getMethod()) {
                     case GET: {
                         /*
-                         * TODO: Query the coordinator for the number of active
+                         * Query the coordinator for the number of active
                          * (non-terminating) servers and send the number back to
                          * the client using `respondWithInt`.
                          */
-                        throw new RuntimeException("Not implemented!");
+                        int numberofActiveServers = this.coordinator.getNumOfServers();
+                        request.respondWithInt(numberofActiveServers);
                     }
                     case POST: {
                         /*
-                         * TODO: Obtain the new number of servers from the request using
+                         * Obtain the new number of servers from the request using
                          * `readInt`, scale to the given number of servers, and finally
                          * respond with the new number of servers.
                          */
-                        throw new RuntimeException("Not implemented!");
+                        int numberOfServer;
+                        if (request.readInt().isPresent()) {
+                            numberOfServer = request.readInt().orElseThrow();
+                            this.coordinator.scale(numberOfServer);
+                            request.respondWithInt(numberOfServer);
+                            // In this case there is no need to scale of the number of servers
+                        } else {
+                            request.respondWithInt(this.coordinator.getNumOfServers());
+                        }
                     }
                 }
                 break;
             }
             case GET_SERVERS: {
                 /**
-                 * TODO: Query the coordinator for the active (non-terminating) servers
+                 * Query the coordinator for the active (non-terminating) servers
                  * and send the ids of these servers to the client.
                  * 
                  * Hint: Use `respondWithServerIds`.
                  */
-                throw new RuntimeException("Not implemented!");
+                final Iterable<ServerId> ids;
+                ids = this.coordinator.getActiveServerIds();
+                request.respondWithServerIds(ids);
             }
 
             case DEBUG: {
@@ -91,7 +104,7 @@ public class Balancer implements RequestHandler {
 
             default:
                 /**
-                 * TODO: The remaining requests must be handed over to a server.
+                 * The remaining requests must be handed over to a server.
                  * 
                  * Hint: Your implementation must be able to handle cases where a server
                  * already terminated or is in the process of terminating when a request
@@ -104,8 +117,32 @@ public class Balancer implements RequestHandler {
                  * skeleton this means constructing and sending a `MsgProcessRequest`
                  * message to the server.
                  */
-                throw new RuntimeException("Not implemented!");
+
+                // check if the request of client is worked from known Server
+                if (request.getServerId().isPresent()) {
+                    // check if this server is now aktive or terminated
+                    ServerId ID_associatedServerKnown = request.getServerId().orElseThrow();
+                    boolean isServerStillActive = this.coordinator.getActiveServerIds()
+                            .contains(ID_associatedServerKnown);
+                    if (isServerStillActive) {
+                        // constructing MsgProcessRequest with request
+                        MsgProcessRequest message = new MsgProcessRequest(request);
+                        var mailBoxOfassociatedServerKnown = this.coordinator
+                                .getServerMailbox(ID_associatedServerKnown);
+                        mailBoxOfassociatedServerKnown.sendLowPriority(message);
+                    }
+                    // if the rquest of client is new or the previous server is terminated, so then obtain a
+                    // random active server to handle this request
+                } else {
+                    // get random server from the list of active servers
+                    ServerId associatedServerID = this.coordinator.pickRandomServer();
+                    // constructing MsgProcessRequest with request
+                    MsgProcessRequest message = new MsgProcessRequest(request);
+                    // get the mail box of this picked server
+                    var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
+                    // send this message with low priority
+                    mailBoxOfPickedServer.sendLowPriority(message);
+                }
         }
     }
 }
-// commet mohamad
