@@ -7,6 +7,7 @@ import java.util.Random;
 
 import com.pseuco.np22.Config;
 import com.pseuco.np22.request.ServerId;
+import com.pseuco.np22.rocket.Server.MsgShutdown;
 
 /**
  * <p>
@@ -139,11 +140,12 @@ public class Coordinator {
      */
     public void removeServer(ServerId serverId) {
         Server removedServer = activeServers.remove(serverId); // remove the server from the activeServers Map
-        removedServer.deactivateServer(); // set the status of the Server to non-active so he knows that he should
-                                          // terminate.
         activeServersIDs.remove(serverId); // remove the id from the activeServerIds List
         terminatedServers.put(serverId, removedServer); // add the removed Server to the terminatedServer Map
         terminatedServersIDs.add(serverId); // add the removed Server to the terminatedServer List
+        // send msgShutdown to the server
+        MsgShutdown mShutdown = new MsgShutdown();
+        removedServer.getMailbox().sendHighPriority(mShutdown);
     }
 
     /**

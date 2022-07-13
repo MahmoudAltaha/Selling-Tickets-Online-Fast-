@@ -18,6 +18,34 @@ public class Estimator implements Runnable {
      */
     private final Mailbox<Command<Estimator>> mailbox = new Mailbox<>();
 
+    private int currentTicketsInSystem = 0;
+
+    /**
+     * add the num of tickets of server/DB to the current estimation
+     * 
+     * @param i
+     */
+    private void addToCurrentTicketsEstimation(int i) {
+        this.currentTicketsInSystem = this.currentTicketsInSystem + i;
+    }
+
+    /**
+     * use this methode to reset the estimation befor a new round of collecting info about
+     * tickets
+     */
+    private void resetCurrentTicketInSystem() {
+        this.currentTicketsInSystem = 0;
+    }
+
+    /**
+     * get the number of tickets in the system
+     * 
+     * @return num- of tickets servers and DB hold
+     */
+    private int getCurrentTicketsInSystem() {
+        return this.currentTicketsInSystem;
+    }
+
     /**
      * Constructs a new {@link Estimator}.
      * 
@@ -42,6 +70,10 @@ public class Estimator implements Runnable {
          * TODO: Implement the estimator as described in the project description. The
          * estimator will periodically send messages to the servers and process the
          * messages from its own mailbox.
+         */
+
+        /**
+         * 
          */
         throw new RuntimeException("Not implemented!");
     }

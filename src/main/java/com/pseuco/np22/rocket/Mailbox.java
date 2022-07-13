@@ -5,7 +5,6 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-
 /**
  * <p>
  * A channel for messages of type {@code M} with two priorities.
@@ -35,12 +34,12 @@ public class Mailbox<M> {
      */
     public boolean isEmpty() {
         MailboxLock.lock();
-        try{
+        try {
             return (LowMailBox.isEmpty() && HighMailBox.isEmpty());
-        }finally{
+        } finally {
             MailboxLock.unlock();
         }
-        
+
     }
 
     /**
@@ -51,15 +50,15 @@ public class Mailbox<M> {
      */
     public boolean sendLowPriority(M message) {
         MailboxLock.lock();
-        try{
+        try {
             boolean messageAdd = LowMailBox.add(message);
             IsMailboxFreeToAccess.signal();
             return messageAdd;
 
-        }finally{
+        } finally {
             MailboxLock.unlock();
         }
-        
+
     }
 
     /**
@@ -70,15 +69,15 @@ public class Mailbox<M> {
      */
     public boolean sendHighPriority(M message) {
         MailboxLock.lock();
-        try{
+        try {
             boolean messageAdd = HighMailBox.add(message);
             IsMailboxFreeToAccess.signal();
             return messageAdd;
 
-        }finally{
+        } finally {
             MailboxLock.unlock();
         }
-        
+
     }
 
     /**
@@ -93,10 +92,11 @@ public class Mailbox<M> {
      * @return The received message.
      * @throws InterruptedException The thread has been interrupted.
      */
-    public M recv() throws InterruptedException {
+    public M recv() throws InterruptedException { // TODO ((mahmoud still not understand the dif. between blocking and
+                                                  // not))
         MailboxLock.lock();
-        try{
-            while((LowMailBox.isEmpty() && HighMailBox.isEmpty())){
+        try {
+            while ((LowMailBox.isEmpty() && HighMailBox.isEmpty())) {
                 IsMailboxFreeToAccess.await();
             }
             M message = null;
@@ -107,13 +107,13 @@ public class Mailbox<M> {
                     message = LowMailBox.poll();
                 }
             } catch (Exception InterruptedException) {
-            return null;
+                return null;
             }
             return message;
-        }finally{
+        } finally {
             MailboxLock.unlock();
         }
-        
+
     }
 
     /**
@@ -129,19 +129,19 @@ public class Mailbox<M> {
      */
     public M tryRecv() {
         MailboxLock.lock();
-        try{
+        try {
             M message = null;
-             try {
+            try {
                 if (HighMailBox.size() > 0) {
                     message = HighMailBox.poll();
-                }else if (LowMailBox.size() > 0) {
+                } else if (LowMailBox.size() > 0) {
                     message = LowMailBox.poll();
                 }
                 return message;
             } catch (Exception InterruptedException) {
-            return null;
+                return null;
             }
-        }finally{
+        } finally {
             MailboxLock.unlock();
         }
     }

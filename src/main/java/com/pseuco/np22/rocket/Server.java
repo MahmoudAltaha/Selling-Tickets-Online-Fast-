@@ -1,6 +1,7 @@
 package com.pseuco.np22.rocket;
 
-import javax.swing.plaf.basic.BasicTreeUI.TreeCancelEditingAction;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.pseuco.np22.request.Request;
 import com.pseuco.np22.request.ServerId;
@@ -24,7 +25,45 @@ public class Server implements Runnable {
      */
     private final Mailbox<Command<Server>> mailbox = new Mailbox<>();
 
+    /*
+     * Useful for the execute of requests from balancer , if the coordinator has sent a shut
+     * down msg to the server then
+     * the server itself would change his active status to false in the execute methode of
+     * msgShutdown. In this case the server must not accept
+     * new request for new reservations therfore, he checks his state in the msgprocessrequest
+     * and acting according to his state.
+     */
     private boolean active;
+
+    /**
+     * List of the Reservations the server have to process.
+     */
+    private List<Reservation> currentReservations = new ArrayList<Reservation>();
+
+    /**
+     * List of allocated tickets from DB. //TODO think about allocateing tickets in case
+     * Server/Or DB have no tickets left.
+     */
+    private List<Ticket> allocatedTickets = new ArrayList<Ticket>();
+
+    /**
+     * Current ticket estimation from estimator
+     */
+    private int currentTicketEstimation = 0;
+
+    /**
+     * set ticket estimation
+     */
+    private void setCurrentTicketEstimation(int i) {
+        this.currentTicketEstimation = i;
+    }
+
+    /**
+     * Methode returns the number of allocated tickets
+     */
+    private int getNumAllocatedTickets() {
+        return allocatedTickets.size();
+    }
 
     /**
      * Constructs a new {@link Server}.
@@ -69,6 +108,23 @@ public class Server implements Runnable {
          * TODO: Implement the server as described in the project description. The
          * server will process the messages sent to its mailbox.
          */
+
+        // #TODO ((wrote by mahmoud))
+        /*
+         * i was trying to figure out how the server should possibly proccess MSGs,
+         * i guess so ... then the logic in the execute methode of each msg. i still don't know
+         * why i got that Interruptedexception
+         * when i called the mailbox so i had to hadle it temporarly like that in a try catch
+         * block.
+         */
+        try {
+            Command<Server> message = getMailbox().recv();
+            message.execute(this);
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
         throw new RuntimeException("Not implemented!");
     }
 

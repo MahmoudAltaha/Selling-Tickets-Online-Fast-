@@ -133,6 +133,8 @@ public class Balancer implements RequestHandler {
                     }
                     // if the rquest of client is new or the previous server is terminated, so then obtain a
                     // random active server to handle this request
+                    // (((wrote by mahmoud)))TODO : ask mohamad about the sequence of if else later and
+                    // generally about isPresent etc.
                 } else {
                     // get random server from the list of active servers
                     ServerId associatedServerID = this.coordinator.pickRandomServer();
