@@ -175,6 +175,8 @@ public class Coordinator {
         allServers.put(id, newServer);
         activeServersIDs.add(id);
         allServersIDs.add(id);
+        // start the server as a thread
+        new Thread(newServer).start();
         return id; // return the id of the created server
     }
 

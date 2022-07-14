@@ -177,6 +177,7 @@ public class Server implements Runnable {
             // the server was in Terminating state and he has finished handling existing requests so
             // he could now terminate
             this.terminateServer();
+            Thread.currentThread().interrupt();
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
