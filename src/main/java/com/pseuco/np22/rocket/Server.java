@@ -118,8 +118,19 @@ public class Server implements Runnable {
          * block.
          */
         try {
-            Command<Server> message = getMailbox().recv();
-            message.execute(this);
+            boolean keepHandlingMsg = true;
+
+            while (keepHandlingMsg) {
+                Command<Server> message = getMailbox().recv();
+                // make sure that the mailbox did not returns a null msg to avoid calling execute on null
+                if (message != null) {
+                    message.execute(this);
+                }
+                if (!isActive() && getMailbox().isEmpty()) {
+                    keepHandlingMsg = false;
+                }
+            }
+            // TODO : i don't know terminate lol.
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
