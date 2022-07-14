@@ -129,7 +129,7 @@ public class Estimator implements Runnable {
 
         @Override
         public void execute(Estimator obj) {
-            throw new RuntimeException("Not implemented!");
+            obj.addToCurrentTicketsEstimation(numAvailable);
         }
     }
 }
