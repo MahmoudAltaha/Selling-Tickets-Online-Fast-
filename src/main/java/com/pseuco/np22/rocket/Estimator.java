@@ -102,10 +102,17 @@ public class Estimator implements Runnable {
                 MsgTicketsAvailable msgTicketsAvailable = new MsgTicketsAvailable(this.getCurrentTicketsInSystem());
                 server.getMailbox().sendHighPriority(msgTicketsAvailable);
             }
+
+            // wait 10/ nonTerminatedServers.Size */
+            int secondsToSleep = 10 / nonTerminatedServers.size();
+            int millisecondsToSleep = secondsToSleep * 1000;
+            try {
+                Thread.sleep(millisecondsToSleep);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
         }
-
-        // *TODO : wait 10/ nonTerminatedServers.Size */
-
     }
 
     /**
