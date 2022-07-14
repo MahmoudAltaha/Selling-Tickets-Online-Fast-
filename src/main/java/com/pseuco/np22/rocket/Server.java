@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.pseuco.np22.request.Request;
 import com.pseuco.np22.request.ServerId;
+import com.pseuco.np22.rocket.Ticket.State;
 
 /**
  * Implements the server.
@@ -46,6 +47,10 @@ public class Server implements Runnable {
      */
     private List<Ticket> allocatedTickets = new ArrayList<Ticket>();
 
+    private List<Ticket> soldTickets = new ArrayList<Ticket>();
+
+    private int NonReservedTickets;
+
     /**
      * Current ticket estimation from estimator
      */
@@ -63,6 +68,14 @@ public class Server implements Runnable {
      */
     private int getNumAllocatedTickets() {
         return allocatedTickets.size();
+    }
+
+    public List<Ticket> getAllocatedTickets() {
+        return this.allocatedTickets;
+    }
+
+    public int getNonReservedTickets() {
+        return this.NonReservedTickets;
     }
 
     /**
@@ -172,7 +185,25 @@ public class Server implements Runnable {
     public static class MsgShutdown implements Command<Server> {
         @Override
         public void execute(Server obj) {
-            throw new RuntimeException("Not implemented!");
+            // if the server have any Available (non reserved or sold ) ticket he should deallocate
+            // them .
+            if (obj.NonReservedTickets > 0) {
+                List<Ticket> ticketsToDeallocate = new ArrayList<>();
+                for (Ticket ticket : obj.getAllocatedTickets()) {
+                    if (ticket.getState().equals(State.AVAILABLE)) {
+                        ticketsToDeallocate.add(ticket);
+                    }
+                }
+                // return the available tickets to the DB
+                obj.coordinator.getDatabase().deallocate(ticketsToDeallocate);
+            }
+            // put state of active to false so the termination steps are happining now
+            obj.deactivateServer();
+            // now the server has to complete the request of already reserved tickets ,this all will
+            // happen in "execute of msgprocess".
+            // return the tickets of aborted reservation immediatly to the data base etc.
+            // we can do that because we can check the state of active before processing each request
+            // so we know what to do.
         }
     }
 
