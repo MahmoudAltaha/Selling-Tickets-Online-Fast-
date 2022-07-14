@@ -12,8 +12,8 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Mailbox<M> {
 
-    PriorityQueue<M> LowMailBox;
-    PriorityQueue<M> HighMailBox;
+    private PriorityQueue<M> LowMailBox;
+    private PriorityQueue<M> HighMailBox;
     private Lock MailboxLock;
     private Condition IsMailboxFreeToAccess;
 

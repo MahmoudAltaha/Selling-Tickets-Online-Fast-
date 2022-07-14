@@ -35,7 +35,22 @@ public class Server implements Runnable {
      * new request for new reservations therfore, he checks his state in the msgprocessrequest
      * and acting according to his state.
      */
-    private boolean active;
+    private ServerState state;
+
+    public static enum ServerState {
+        /**
+         * The ticket is <em>available</em>, i.e., it has neither been reserved nor sold.
+         */
+        ACTIVE,
+        /**
+         * The ticket has been <em>reserved</em> by a customer.
+         */
+        INTERMINATION,
+        /**
+         * The ticket has been <em>sold</em> to a customer.
+         */
+        TERMINATED;
+    }
 
     /**
      * List of the Reservations the server have to process.
@@ -88,7 +103,7 @@ public class Server implements Runnable {
     public Server(ServerId id, Coordinator coordinator) {
         this.id = id;
         this.coordinator = coordinator;
-        active = true;
+        this.state = ServerState.ACTIVE;
     }
 
     /**
@@ -106,14 +121,29 @@ public class Server implements Runnable {
      * @return The {@link active}
      */
     public boolean isActive() {
-        return active;
+        return (this.state.equals(ServerState.ACTIVE));
+    }
+
+    /**
+     * 
+     * @return
+     */
+    public boolean isTerminated() {
+        return this.state.equals(ServerState.TERMINATED);
     }
 
     /**
      * set the status of the Server to non active
      */
-    public void deactivateServer() {
-        active = false;
+    private void deactivateServer() {
+        this.state = ServerState.INTERMINATION;
+    }
+
+    /**
+     * 
+     */
+    private void terminateServer() {
+        this.state = ServerState.TERMINATED;
     }
 
     @Override
@@ -144,7 +174,9 @@ public class Server implements Runnable {
                     keepHandlingMsg = false;
                 }
             }
-            // TODO : i don't know terminate lol.
+            // the server was in Terminating state and he has finished handling existing requests so
+            // he could now terminate
+            this.terminateServer();
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -245,7 +277,7 @@ public class Server implements Runnable {
             // create he msg to send to estimator
             MsgAvailableServer msgAvailableServer = new MsgAvailableServer(obj.id, availableTicketAllocatedByServer);
             final var estimatormailbox = obj.coordinator.getEstimatorMailbox();
-            // send the msg to mailbox of estimator
+            // send the msg to mailbox of
             estimatormailbox.sendHighPriority(msgAvailableServer);
 
         }

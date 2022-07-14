@@ -1,6 +1,7 @@
 package com.pseuco.np22.rocket;
 
 import com.pseuco.np22.request.ServerId;
+import com.pseuco.np22.rocket.Server.MsgTicketsAvailable;
 
 /**
  * <p>
@@ -71,11 +72,29 @@ public class Estimator implements Runnable {
          * estimator will periodically send messages to the servers and process the
          * messages from its own mailbox.
          */
+        while (true) {
+            // check for non terminated servers and query the number of ticket each server has .
+            int numOfServersAsked = 0;
+            for (ServerId serverId : this.coordinator.getAllServerIds()) {
+                Server serverToCheck = this.coordinator.getAllServers().get(serverId);
+                if (!serverToCheck.isTerminated()) {
+                    int TicketsTheServerHas = serverToCheck.getNonReservedTickets();
+                    this.addToCurrentTicketsEstimation(TicketsTheServerHas);
+                    numOfServersAsked++;
+                }
+            }
+            // now get the num of tickets in DB
+            int numberofTicketsInDB = this.coordinator.getDatabase().getNumAvailable();
+            this.addToCurrentTicketsEstimation(numberofTicketsInDB);
+            // send all servers the estimation number
+            for (ServerId serverId : this.coordinator.getAllServerIds()) {
+                Server serverToSendMsgTo = this.coordinator.getAllServers().get(serverId);
+                // create the msg to send
+                MsgTicketsAvailable msgTicketsAvailable = new MsgTicketsAvailable(this.getCurrentTicketsInSystem());
+                serverToSendMsgTo.getMailbox().sendHighPriority(msgTicketsAvailable);
+            }
 
-        /**
-         * 
-         */
-        throw new RuntimeException("Not implemented!");
+        }
     }
 
     /**

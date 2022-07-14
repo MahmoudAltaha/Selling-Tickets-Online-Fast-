@@ -71,6 +71,14 @@ public class Coordinator {
     }
 
     /**
+     * 
+     * @return Map with all servers
+     */
+    public HashMap<ServerId, Server> getAllServers() {
+        return this.allServers;
+    }
+
+    /**
      * Returns the configuration of the system.
      * 
      * @return The configuration of the system.
