@@ -247,6 +247,7 @@ public class Server implements Runnable {
             final var estimatormailbox = obj.coordinator.getEstimatorMailbox();
             // send the msg to mailbox of estimator
             estimatormailbox.sendHighPriority(msgAvailableServer);
+
         }
     }
 
