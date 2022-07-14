@@ -30,24 +30,26 @@ public class Server implements Runnable {
     /*
      * Useful for the execute of requests from balancer , if the coordinator has sent a shut
      * down msg to the server then
-     * the server itself would change his active status to false in the execute methode of
+     * the server itself would change his active status to "INTERMIATION" in the execute
+     * methode of
      * msgShutdown. In this case the server must not accept
-     * new request for new reservations therfore, he checks his state in the msgprocessrequest
+     * new request for new reservations. Therfore, he checks his state in the
+     * msgprocessrequest
      * and acting according to his state.
      */
     private ServerState state;
 
     public static enum ServerState {
         /**
-         * The ticket is <em>available</em>, i.e., it has neither been reserved nor sold.
+         * The server is active and can process all kind of requests.
          */
         ACTIVE,
         /**
-         * The ticket has been <em>reserved</em> by a customer.
+         * The servr has resieved a shutdown msg and started terination steps
          */
         INTERMINATION,
         /**
-         * The ticket has been <em>sold</em> to a customer.
+         * The server is terminated .
          */
         TERMINATED;
     }
@@ -63,36 +65,21 @@ public class Server implements Runnable {
      */
     private List<Ticket> allocatedTickets = new ArrayList<Ticket>();
 
+    /**
+     * the Tickets in this List are all sold , they should not be in allocatedTickets list
+     * anymore (still not sure if we need it, we will see)
+     */
     private List<Ticket> soldTickets = new ArrayList<Ticket>();
 
+    /**
+     * number of available tickets "non-reserved"
+     */
     private int NonReservedTickets;
 
     /**
      * Current ticket estimation from estimator
      */
     private int currentTicketEstimation = 0;
-
-    /**
-     * set ticket estimation
-     */
-    private void setCurrentTicketEstimation(int i) {
-        this.currentTicketEstimation = i;
-    }
-
-    /**
-     * Methode returns the number of allocated tickets
-     */
-    private int getNumAllocatedTickets() {
-        return allocatedTickets.size();
-    }
-
-    public List<Ticket> getAllocatedTickets() {
-        return this.allocatedTickets;
-    }
-
-    public int getNonReservedTickets() {
-        return this.NonReservedTickets;
-    }
 
     /**
      * Constructs a new {@link Server}.
@@ -113,6 +100,36 @@ public class Server implements Runnable {
      */
     public Mailbox<Command<Server>> getMailbox() {
         return this.mailbox;
+    }
+
+    /**
+     * set ticket estimation
+     */
+    private void setCurrentTicketEstimation(int i) {
+        this.currentTicketEstimation = i;
+    }
+
+    /**
+     * Methode returns the number of allocated tickets "All Tickets"
+     */
+    private int getNumAllocatedTickets() {
+        return allocatedTickets.size();
+    }
+
+    /**
+     * 
+     * @return list with allocated tickets
+     */
+    public List<Ticket> getAllocatedTickets() {
+        return this.allocatedTickets;
+    }
+
+    /**
+     * 
+     * @return number of non-Reserved Tickets
+     */
+    public int getNonReservedTickets() {
+        return this.NonReservedTickets;
     }
 
     /**

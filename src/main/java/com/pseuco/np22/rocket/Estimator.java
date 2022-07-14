@@ -25,9 +25,27 @@ public class Estimator implements Runnable {
     private int currentTicketsInSystem = 0;
 
     /**
+     * Constructs a new {@link Estimator}.
+     * 
+     * @param coordinator The {@link Coordinator} of the ticket sales system.
+     */
+    public Estimator(Coordinator coordinator) {
+        this.coordinator = coordinator;
+    }
+
+    /**
+     * Returns the {@link Mailbox} of the estimator.
+     * 
+     * @return The {@link Mailbox} of the estimator.
+     */
+    public Mailbox<Command<Estimator>> getMailbox() {
+        return this.mailbox;
+    }
+
+    /**
      * add the num of tickets of server/DB to the current estimation
      * 
-     * @param i
+     * @param i number of ticket we need to add to the current estimation
      */
     private void addToCurrentTicketsEstimation(int i) {
         this.currentTicketsInSystem = this.currentTicketsInSystem + i;
@@ -48,24 +66,6 @@ public class Estimator implements Runnable {
      */
     private int getCurrentTicketsInSystem() {
         return this.currentTicketsInSystem;
-    }
-
-    /**
-     * Constructs a new {@link Estimator}.
-     * 
-     * @param coordinator The {@link Coordinator} of the ticket sales system.
-     */
-    public Estimator(Coordinator coordinator) {
-        this.coordinator = coordinator;
-    }
-
-    /**
-     * Returns the {@link Mailbox} of the estimator.
-     * 
-     * @return The {@link Mailbox} of the estimator.
-     */
-    public Mailbox<Command<Estimator>> getMailbox() {
-        return this.mailbox;
     }
 
     @Override
