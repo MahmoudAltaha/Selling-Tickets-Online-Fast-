@@ -69,7 +69,7 @@ public class Balancer implements RequestHandler {
                          * respond with the new number of servers.
                          */
                         int numberOfServer;
-                        if (request.readInt().isPresent()) {
+                        if (!request.readInt().isEmpty()) {
                             numberOfServer = request.readInt().orElseThrow();
                             this.coordinator.scale(numberOfServer);
                             request.respondWithInt(numberOfServer);
@@ -119,7 +119,7 @@ public class Balancer implements RequestHandler {
                  */
 
                 // check if the request of client is worked from known Server
-                if (request.getServerId().isPresent()) {
+                if (!request.getServerId().isEmpty()) {
                     // check if this server is now aktive or terminated
                     ServerId ID_associatedServerKnown = request.getServerId().orElseThrow();
                     boolean isServerStillActive = this.coordinator.getActiveServerIds()
@@ -138,6 +138,8 @@ public class Balancer implements RequestHandler {
                 } else {
                     // get random server from the list of active servers
                     ServerId associatedServerID = this.coordinator.pickRandomServer();
+                    // correlate a customar with specific server
+                    request.setServerId(associatedServerID);
                     // constructing MsgProcessRequest with request
                     MsgProcessRequest message = new MsgProcessRequest(request);
                     // get the mail box of this picked server
