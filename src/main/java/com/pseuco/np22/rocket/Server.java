@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.pseuco.np22.request.Request;
 import com.pseuco.np22.request.ServerId;
+import com.pseuco.np22.rocket.Estimator.MsgAvailableServer;
 import com.pseuco.np22.rocket.Ticket.State;
 
 /**
@@ -231,7 +232,21 @@ public class Server implements Runnable {
             // To inform the estimator, you must sent a `MsgAvailableServer` to its
             // mailbox. You can obtain this mailbox as follows:
             // final var mailbox = obj.coordinator.getEstimatorMailbox();
-            throw new RuntimeException("Not implemented!");
+
+            // update the estimation of tickets
+            obj.setCurrentTicketEstimation(numAvailable);
+            int availableTicketAllocatedByServer = 0;
+            // find out how many available ticket the server have
+            for (Ticket ticket : obj.allocatedTickets) {
+                if (ticket.getState().equals(State.AVAILABLE)) {
+                    availableTicketAllocatedByServer++;
+                }
+            }
+            // create he msg to send to estimator
+            MsgAvailableServer msgAvailableServer = new MsgAvailableServer(obj.id, availableTicketAllocatedByServer);
+            final var estimatormailbox = obj.coordinator.getEstimatorMailbox();
+            // send the msg to mailbox of estimator
+            estimatormailbox.sendHighPriority(msgAvailableServer);
         }
     }
 
