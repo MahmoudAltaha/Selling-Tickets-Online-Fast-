@@ -104,10 +104,10 @@ public class Estimator implements Runnable {
             }
 
             // wait 10/ nonTerminatedServers.Size */
-            long secondsToSleep = 10 / nonTerminatedServers.size();
-            long millisecondsToSleep = secondsToSleep * 1000;
+            double secondsToSleep = 10 / nonTerminatedServers.size();
+            double millisecondsToSleep = secondsToSleep * 1000;
             try {
-                Thread.sleep(millisecondsToSleep);
+                Thread.sleep((long) millisecondsToSleep);
             } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
