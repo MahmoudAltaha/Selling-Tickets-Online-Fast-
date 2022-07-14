@@ -1,5 +1,8 @@
 package com.pseuco.np22.rocket;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.pseuco.np22.request.ServerId;
 import com.pseuco.np22.rocket.Server.MsgTicketsAvailable;
 
@@ -73,26 +76,34 @@ public class Estimator implements Runnable {
          * messages from its own mailbox.
          */
         while (true) {
+            // List of non terminated servers,,,,after each iterate we reset it
+            List<Server> nonTerminatedServers = new ArrayList<>();
             // check for non terminated servers and query the number of ticket each server has .
-            int numOfServersAsked = 0;
             for (ServerId serverId : this.coordinator.getAllServerIds()) {
                 Server serverToCheck = this.coordinator.getAllServers().get(serverId);
                 if (!serverToCheck.isTerminated()) {
-                    int TicketsTheServerHas = serverToCheck.getNonReservedTickets();
-                    this.addToCurrentTicketsEstimation(TicketsTheServerHas);
-                    numOfServersAsked++;
+                    nonTerminatedServers.add(serverToCheck);
                 }
             }
             // now get the num of tickets in DB
             int numberofTicketsInDB = this.coordinator.getDatabase().getNumAvailable();
             this.addToCurrentTicketsEstimation(numberofTicketsInDB);
+            // read the msgs to estimate ....in first round it is empty.
+            while (!this.getMailbox().isEmpty()) {
+                Command<Estimator> msg = this.getMailbox().tryRecv();
+                msg.execute(this);
+            }
             // send all servers the estimation number
             for (ServerId serverId : this.coordinator.getAllServerIds()) {
                 Server serverToSendMsgTo = this.coordinator.getAllServers().get(serverId);
                 // create the msg to send
-                MsgTicketsAvailable msgTicketsAvailable = new MsgTicketsAvailable(this.getCurrentTicketsInSystem());
-                serverToSendMsgTo.getMailbox().sendHighPriority(msgTicketsAvailable);
+                if (!serverToSendMsgTo.isTerminated()) {
+                    MsgTicketsAvailable msgTicketsAvailable = new MsgTicketsAvailable(this.getCurrentTicketsInSystem());
+                    serverToSendMsgTo.getMailbox().sendHighPriority(msgTicketsAvailable);
+                }
             }
+
+            // *TODO : wait 10/ nonTerminatedServers.Size */
 
         }
     }
