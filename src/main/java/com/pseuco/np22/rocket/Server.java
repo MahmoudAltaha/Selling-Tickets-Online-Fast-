@@ -120,7 +120,7 @@ public class Server implements Runnable {
      * 
      * @return list with allocated tickets
      */
-    public List<Ticket> getAllocatedTickets() {
+    private List<Ticket> getAllocatedTickets() {
         return this.allocatedTickets;
     }
 
@@ -128,7 +128,7 @@ public class Server implements Runnable {
      * 
      * @return number of non-Reserved Tickets
      */
-    public int getNonReservedTickets() {
+    private int getNonReservedTickets() {
         return this.NonReservedTickets;
     }
 
