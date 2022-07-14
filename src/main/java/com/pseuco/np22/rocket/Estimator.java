@@ -78,7 +78,9 @@ public class Estimator implements Runnable {
         while (true) {
             // List of non terminated servers,,,,after each iterate we reset it
             List<Server> nonTerminatedServers = new ArrayList<>();
-            // check for non terminated servers and query the number of ticket each server has .
+            // reset the old estimation.
+            this.resetCurrentTicketInSystem();
+            // check for non terminated servers
             for (ServerId serverId : this.coordinator.getAllServerIds()) {
                 Server serverToCheck = this.coordinator.getAllServers().get(serverId);
                 if (!serverToCheck.isTerminated()) {
@@ -88,24 +90,22 @@ public class Estimator implements Runnable {
             // now get the num of tickets in DB
             int numberofTicketsInDB = this.coordinator.getDatabase().getNumAvailable();
             this.addToCurrentTicketsEstimation(numberofTicketsInDB);
-            // read the msgs to estimate ....in first round it is empty.
+            // read the msgs to estimate from each server that is still not terminated....in first
+            // round it is empty.
             while (!this.getMailbox().isEmpty()) {
                 Command<Estimator> msg = this.getMailbox().tryRecv();
                 msg.execute(this);
             }
             // send all servers the estimation number
-            for (ServerId serverId : this.coordinator.getAllServerIds()) {
-                Server serverToSendMsgTo = this.coordinator.getAllServers().get(serverId);
+            for (Server server : nonTerminatedServers) {
                 // create the msg to send
-                if (!serverToSendMsgTo.isTerminated()) {
-                    MsgTicketsAvailable msgTicketsAvailable = new MsgTicketsAvailable(this.getCurrentTicketsInSystem());
-                    serverToSendMsgTo.getMailbox().sendHighPriority(msgTicketsAvailable);
-                }
+                MsgTicketsAvailable msgTicketsAvailable = new MsgTicketsAvailable(this.getCurrentTicketsInSystem());
+                server.getMailbox().sendHighPriority(msgTicketsAvailable);
             }
-
-            // *TODO : wait 10/ nonTerminatedServers.Size */
-
         }
+
+        // *TODO : wait 10/ nonTerminatedServers.Size */
+
     }
 
     /**
