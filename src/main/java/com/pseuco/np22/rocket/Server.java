@@ -2,8 +2,11 @@ package com.pseuco.np22.rocket;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import com.pseuco.np22.request.Request;
+import com.pseuco.np22.request.CustomerId;
 import com.pseuco.np22.request.ServerId;
 import com.pseuco.np22.rocket.Estimator.MsgAvailableServer;
 import com.pseuco.np22.rocket.Ticket.State;
@@ -55,9 +58,9 @@ public class Server implements Runnable {
     }
 
     /**
-     * List of the Reservations the server have to process.
+     * Reservations made by customers. //TODO: I replace the List by Map
      */
-    private List<Reservation> currentReservations = new ArrayList<Reservation>();
+    private Map<CustomerId, Reservation> reservations = new HashMap<>();
 
     /**
      * List of allocated tickets from DB. //TODO think about allocateing tickets in case
@@ -163,6 +166,22 @@ public class Server implements Runnable {
         this.state = ServerState.TERMINATED;
     }
 
+    /**
+     * Aborts and removes reservations with an expired timeout.
+     */
+    private void clearReservations() {
+        this.reservations.values().removeIf(reservation -> {
+            if (reservation.getAge() > this.coordinator.getConfig().getTimeout()) {
+                // Make the ticket available again.
+                this.allocatedTickets.add(reservation.abort());
+                return true;
+            } else {
+                return false;
+            }
+        });
+
+    }
+
     @Override
     public void run() {
         /*
@@ -224,7 +243,94 @@ public class Server implements Runnable {
             /*
              * 📌 Hint: Use the 🐌 implementation as a basis.
              */
-            throw new RuntimeException("Not implemented!");
+
+            // note: this implementaion is very identical with the 🐌 implementation
+
+            obj.clearReservations();
+            switch (request.getKind()) {
+
+                case NUM_AVAILABLE_TICKETS: {
+                    // respond with an approximation of the actual number.
+                    int currentTicketEstimation = obj.currentTicketEstimation;
+                    request.respondWithInt(currentTicketEstimation);
+
+                    break;
+                }
+                case RESERVE_TICKET: {
+
+                    final var customer = request.getCustomerId();
+                    if (obj.reservations.containsKey(customer)) {
+                        // We do not allow a customer to reserve more than a ticket at a time.
+                        request.respondWithError("A ticket has already been reserved!");
+
+                    } else if (obj.getNumAllocatedTickets() > 0) {
+                        // Take a ticket from the list of allocatedTickets tickets and reserve it.
+                        final var ticket = obj.allocatedTickets.get(0);
+                        obj.allocatedTickets.remove(0);
+                        obj.reservations.put(customer, new Reservation(ticket));
+                        // Respond with the id of the reserved ticket.
+                        request.respondWithInt(ticket.getId());
+                    } else
+                        // Tell the client that no tickets are available.
+                        request.respondWithSoldOut();
+
+                    break;
+                }
+                case ABORT_PURCHASE: {
+                    final var customer = request.getCustomerId();
+                    if (!obj.reservations.containsKey(customer)) {
+                        // Without a reservation there is nothing to abort.
+                        request.respondWithError("No ticket has been reserved!");
+                    } else {
+                        final var reservation = obj.reservations.get(customer);
+                        // TODO : I have to read this "readInt" methode with mahmmud again
+                        final var ticketId = request.readInt();
+                        if (ticketId.isEmpty()) {
+                            // The client is supposed to provide a ticket id.
+                            request.respondWithError("No ticket id provided!");
+                        } else if (ticketId.get() == reservation.getTicketId()) {
+                            // Abort the reservation and put the ticket back on the allocatedTickets.
+                            final var ticket = reservation.abort();
+                            obj.allocatedTickets.add(ticket);
+                            obj.reservations.remove(customer);
+                            // Respond with the id of the formerly reserved ticket.
+                            request.respondWithInt(ticket.getId());
+
+                        } else {
+                            // The id does not match the id of the reservation.
+                            request.respondWithError("Invalid ticket id provided!");
+                        }
+
+                    }
+                    break;
+                }
+                case BUY_TICKET: {
+                    final var customer = request.getCustomerId();
+                    if (!obj.reservations.containsKey(customer)) {
+                        // Without a reservation there is nothing to buy.
+                        request.respondWithError("No ticket has been reserved!");
+                    } else {
+                        final var reservation = obj.reservations.get(customer);
+                        final var ticketId = request.readInt();
+                        if (ticketId.isEmpty()) {
+                            // The client is supposed to provide a ticket id.
+                            request.respondWithError("No ticket id provided!");
+                        } else if (ticketId.get() == reservation.getTicketId()) {
+                            // Sell the ticket to the customer.
+                            final var ticket = reservation.sell();
+                            obj.allocatedTickets.remove(ticket);
+                            obj.reservations.remove(customer);
+                            // Respond with the id of the sold ticket.
+                            request.respondWithInt(ticket.getId());
+
+                        } else {
+                            // The id does not match the id of the reservation.
+                            request.respondWithError("Invalid ticket id provided!");
+                        }
+                    }
+                    break;
+                }
+            }
         }
     }
 
