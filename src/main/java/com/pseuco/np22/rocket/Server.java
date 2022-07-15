@@ -94,6 +94,12 @@ public class Server implements Runnable {
         this.id = id;
         this.coordinator = coordinator;
         this.state = ServerState.ACTIVE;
+        List<Ticket> tikets = this.coordinator.getDatabase().allocate(10);
+        if (!tikets.isEmpty()) {
+            for (int i = 0; i < tikets.size(); i++) {
+                this.getAllocatedTickets().add(tikets.get(0));
+            }
+        }
     }
 
     /**
