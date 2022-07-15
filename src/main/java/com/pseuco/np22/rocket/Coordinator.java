@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.pseuco.np22.Config;
 import com.pseuco.np22.request.ServerId;
@@ -58,6 +59,8 @@ public class Coordinator {
      */
     private final List<ServerId> allServersIDs = new ArrayList<ServerId>();
 
+    private ReentrantLock coordinatorLock = new ReentrantLock();
+
     /**
      * Constructs a new {@link Coordinator}.
      * 
@@ -75,7 +78,12 @@ public class Coordinator {
      * @return Map with all servers
      */
     public HashMap<ServerId, Server> getAllServers() {
-        return this.allServers;
+        this.coordinatorLock.lock();
+        try {
+            return this.allServers;
+        } finally {
+            this.coordinatorLock.unlock();
+        }
     }
 
     /**
@@ -84,7 +92,12 @@ public class Coordinator {
      * @return The configuration of the system.
      */
     public Config getConfig() {
-        return this.config;
+        this.coordinatorLock.lock();
+        try {
+            return this.config;
+        } finally {
+            this.coordinatorLock.unlock();
+        }
     }
 
     /**
@@ -93,7 +106,12 @@ public class Coordinator {
      * @return The database of the system.
      */
     public Database getDatabase() {
-        return this.database;
+        this.coordinatorLock.lock();
+        try {
+            return this.database;
+        } finally {
+            this.coordinatorLock.unlock();
+        }
     }
 
     /**
@@ -102,7 +120,12 @@ public class Coordinator {
      * @return The mailbox of the estimator of the system.
      */
     public Mailbox<Command<Estimator>> getEstimatorMailbox() {
-        return this.estimator.getMailbox();
+        this.coordinatorLock.lock();
+        try {
+            return this.estimator.getMailbox();
+        } finally {
+            this.coordinatorLock.unlock();
+        }
     }
 
     /**
@@ -112,7 +135,12 @@ public class Coordinator {
      * @return The mailbox of the server with the given id.
      */
     public Mailbox<Command<Server>> getServerMailbox(ServerId serverId) {
-        return allServers.get(serverId).getMailbox();
+        this.coordinatorLock.lock();
+        try {
+            return allServers.get(serverId).getMailbox();
+        } finally {
+            this.coordinatorLock.unlock();
+        }
     }
 
     /**
@@ -127,11 +155,16 @@ public class Coordinator {
      * @return The id of the randomly picked server.
      */
     public ServerId pickRandomServer() {
-        Random r = new Random();
-        // Obtain a random number between [0 , (activeServersIDs.size()-1) ].
-        int randomNumber = r.nextInt(activeServersIDs.size());
-        // since the list also start from 0 , we don't have to add 1 to the result.
-        return activeServersIDs.get(randomNumber);
+        this.coordinatorLock.lock();
+        try {
+            Random r = new Random();
+            // Obtain a random number between [0 , (activeServersIDs.size()-1) ].
+            int randomNumber = r.nextInt(activeServersIDs.size());
+            // since the list also start from 0 , we don't have to add 1 to the result.
+            return activeServersIDs.get(randomNumber);
+        } finally {
+            this.coordinatorLock.unlock();
+        }
     }
 
     /**
@@ -147,6 +180,7 @@ public class Coordinator {
      * @param serverId The id of the server to remove.
      */
     public void removeServer(ServerId serverId) {
+
         Server removedServer = activeServers.remove(serverId); // remove the server from the activeServers Map
         activeServersIDs.remove(serverId); // remove the id from the activeServerIds List
         terminatedServers.put(serverId, removedServer); // add the removed Server to the terminatedServer Map
@@ -154,6 +188,7 @@ public class Coordinator {
         // send msgShutdown to the server
         MsgShutdown mShutdown = new MsgShutdown();
         removedServer.getMailbox().sendHighPriority(mShutdown);
+
     }
 
     /**
@@ -168,6 +203,7 @@ public class Coordinator {
      * @return The id of the new server.
      */
     public ServerId createServer() {
+
         ServerId id = ServerId.generate(); // create new serverID
         Server newServer = new Server(id, this); // create new Server with the generated id
         // add the new server to the HashMap/List of active server/ServerID
@@ -178,6 +214,7 @@ public class Coordinator {
         // start the server as a thread
         new Thread(newServer).start();
         return id; // return the id of the created server
+
     }
 
     /**
@@ -187,37 +224,42 @@ public class Coordinator {
      * @return The number of servers.
      */
     public int scale(int numServers) {
-        /*
-         * if there are no servers yet created (beginn fo the system) the create the servers
-         * according to the giving number.
-         */
-        if (activeServers.isEmpty()) {
-            for (int i = 0; i < numServers; i++) {
-                createServer();
+        this.coordinatorLock.lock();
+        try {
+            /*
+             * if there are no servers yet created (beginn fo the system) the create the servers
+             * according to the giving number.
+             */
+            if (activeServers.isEmpty()) {
+                for (int i = 0; i < numServers; i++) {
+                    createServer();
+                }
+                /*
+                 * if the number of wished servers are bigger than the current active servers we have then
+                 * create the servers we still need
+                 */
+            } else if (numServers > activeServers.size()) {
+                int numOfServersToCreate = numServers - activeServers.size();
+                for (int i = 0; i < numOfServersToCreate; i++) {
+                    createServer();
+                }
             }
             /*
-             * if the number of wished servers are bigger than the current active servers we have then
-             * create the servers we still need
+             * if the number of wished servers are smaller than the current active servers we have
+             * then remove the servers we do not want
+             * for easy work we do not pick randomly we just remove the first server we get from the
+             * list of active servers.
              */
-        } else if (numServers > activeServers.size()) {
-            int numOfServersToCreate = numServers - activeServers.size();
-            for (int i = 0; i < numOfServersToCreate; i++) {
-                createServer();
+            else if (numServers < activeServers.size()) {
+                int numOfServersToRemove = numServers - activeServers.size();
+                for (int i = 0; i < numOfServersToRemove; i++) {
+                    removeServer(activeServersIDs.get(0));
+                }
             }
+            return numServers;
+        } finally {
+            this.coordinatorLock.unlock();
         }
-        /*
-         * if the number of wished servers are smaller than the current active servers we have
-         * then remove the servers we do not want
-         * for easy work we do not pick randomly we just remove the first server we get from the
-         * list of active servers.
-         */
-        else if (numServers < activeServers.size()) {
-            int numOfServersToRemove = numServers - activeServers.size();
-            for (int i = 0; i < numOfServersToRemove; i++) {
-                removeServer(activeServersIDs.get(0));
-            }
-        }
-        return numServers;
     }
 
     /**
@@ -226,7 +268,12 @@ public class Coordinator {
      * @return The number of active (non-terminating) servers.
      */
     public int getNumOfServers() {
-        return activeServers.size();
+        this.coordinatorLock.lock();
+        try {
+            return activeServers.size();
+        } finally {
+            this.coordinatorLock.unlock();
+        }
     }
 
     /**
@@ -235,7 +282,12 @@ public class Coordinator {
      * @return A list of {@link ServerId} of the active servers.
      */
     public List<ServerId> getActiveServerIds() {
-        return activeServersIDs;
+        this.coordinatorLock.lock();
+        try {
+            return activeServersIDs;
+        } finally {
+            this.coordinatorLock.unlock();
+        }
     }
 
     /**
@@ -251,6 +303,11 @@ public class Coordinator {
      * @return A list of {@link ServerId} of the all servers.
      */
     public List<ServerId> getAllServerIds() {
-        return allServersIDs;
+        this.coordinatorLock.lock();
+        try {
+            return allServersIDs;
+        } finally {
+            this.coordinatorLock.unlock();
+        }
     }
 }

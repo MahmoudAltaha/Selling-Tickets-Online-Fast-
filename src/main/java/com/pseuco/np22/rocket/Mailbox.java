@@ -2,7 +2,6 @@ package com.pseuco.np22.rocket;
 
 import java.util.PriorityQueue;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -14,7 +13,7 @@ public class Mailbox<M> {
 
     private PriorityQueue<M> LowMailBox;
     private PriorityQueue<M> HighMailBox;
-    private Lock MailboxLock;
+    private ReentrantLock MailboxLock;
     private Condition IsMailboxFreeToAccess;
 
     /**
