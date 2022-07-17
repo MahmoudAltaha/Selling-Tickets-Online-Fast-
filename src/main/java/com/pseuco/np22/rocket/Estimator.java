@@ -1,6 +1,8 @@
 package com.pseuco.np22.rocket;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import com.pseuco.np22.request.ServerId;
@@ -23,6 +25,11 @@ public class Estimator implements Runnable {
     private final Mailbox<Command<Estimator>> mailbox = new Mailbox<>();
 
     private int currentTicketsInSystem = 0;
+
+    /**
+     * map which contains the serverID and the estimation we got from that server.
+     */
+    private final HashMap<ServerId, Integer> serverEstimations = new HashMap<>();
 
     /**
      * Constructs a new {@link Estimator}.
@@ -59,15 +66,6 @@ public class Estimator implements Runnable {
         this.currentTicketsInSystem = 0;
     }
 
-    /**
-     * get the number of tickets in the system
-     * 
-     * @return num- of tickets servers and DB hold
-     */
-    private int getCurrentTicketsInSystem() {
-        return this.currentTicketsInSystem;
-    }
-
     @Override
     public void run() {
         /*
@@ -77,14 +75,18 @@ public class Estimator implements Runnable {
          */
         while (true) {
             // List of non terminated servers,,,,after each iterate we reset it
-            List<Server> nonTerminatedServers = new ArrayList<>();
+            HashMap<ServerId, Server> nonTerminatedServers = new HashMap<>();
+            List<ServerId> nonTerminatedServersIds = new ArrayList<>();
             // reset the old estimation.
             this.resetCurrentTicketInSystem();
+            this.serverEstimations.clear();
+
             // check for non terminated servers
             for (ServerId serverId : this.coordinator.getAllServerIds()) {
                 Server serverToCheck = this.coordinator.getAllServers().get(serverId);
                 if (!serverToCheck.isTerminated()) {
-                    nonTerminatedServers.add(serverToCheck);
+                    nonTerminatedServers.put(serverId, serverToCheck);
+                    nonTerminatedServersIds.add(serverId);
                 }
             }
             // now get the num of tickets in DB
@@ -96,11 +98,22 @@ public class Estimator implements Runnable {
                 Command<Estimator> msg = this.getMailbox().tryRecv();
                 msg.execute(this);
             }
-            // send all servers the estimation number
-            for (Server server : nonTerminatedServers) {
+            // send all servers the estimation number (except the number of ticket the server we send
+            // to has itself)
+            int numberOfTicketInServers = 0;
+
+            for (ServerId serverId : nonTerminatedServersIds) {
+                Iterator it = serverEstimations.entrySet().iterator();
+                while (it.hasNext()) {
+                    ServerId sID = (ServerId) it.next();
+                    if (!sID.equals(serverId)) {
+                        numberOfTicketInServers = numberOfTicketInServers + serverEstimations.get(serverId);
+                    }
+                }
                 // create the msg to send
-                MsgTicketsAvailable msgTicketsAvailable = new MsgTicketsAvailable(this.getCurrentTicketsInSystem());
-                server.getMailbox().sendHighPriority(msgTicketsAvailable);
+                int endEstimation = numberOfTicketInServers + numberofTicketsInDB;
+                MsgTicketsAvailable msgTicketsAvailable = new MsgTicketsAvailable(endEstimation);
+                nonTerminatedServers.get(serverId).getMailbox().sendHighPriority(msgTicketsAvailable);
             }
 
             // wait 10/ nonTerminatedServers.Size */
@@ -136,7 +149,7 @@ public class Estimator implements Runnable {
 
         @Override
         public void execute(Estimator obj) {
-            obj.addToCurrentTicketsEstimation(numAvailable);
+            obj.serverEstimations.put(serverId, numAvailable);
         }
     }
 }
