@@ -138,7 +138,7 @@ public class Server implements Runnable {
      * @return number of non-Reserved Tickets
      */
     private int getNonReservedTickets() {
-        return this.NonReservedTickets;
+        return this.allocatedTickets.size();
     }
 
     /**
@@ -212,7 +212,7 @@ public class Server implements Runnable {
                 if (message != null) {
                     message.execute(this);
                 }
-                if (!isActive() && getMailbox().isEmpty()) {
+                if (!isActive() && getMailbox().isEmpty() && this.reservations.isEmpty()) {
                     keepHandlingMsg = false;
                 }
             }
@@ -277,11 +277,14 @@ public class Server implements Runnable {
                         // Respond with the id of the reserved ticket.
                         request.respondWithInt(ticket.getId());
                     } else
-                        // Tell the client that no tickets are available.
+                        // TODO : make "if-condiation" for list obj.coordinator.getDatabase().allocate(10);
+                        // Tell the client that no tickets are available,
+                        // see the load balancer
                         request.respondWithSoldOut();
 
                     break;
-                }
+                } // TODO :we have to get the abort ticket back to data base direct, only if ther server
+                  // nonactive state
                 case ABORT_PURCHASE: {
                     final var customer = request.getCustomerId();
                     if (!obj.reservations.containsKey(customer)) {
@@ -289,7 +292,7 @@ public class Server implements Runnable {
                         request.respondWithError("No ticket has been reserved!");
                     } else {
                         final var reservation = obj.reservations.get(customer);
-                        // TODO : I have to read this "readInt" methode with mahmmud again
+
                         final var ticketId = request.readInt();
                         if (ticketId.isEmpty()) {
                             // The client is supposed to provide a ticket id.
@@ -324,7 +327,6 @@ public class Server implements Runnable {
                         } else if (ticketId.get() == reservation.getTicketId()) {
                             // Sell the ticket to the customer.
                             final var ticket = reservation.sell();
-                            obj.allocatedTickets.remove(ticket);
                             obj.reservations.remove(customer);
                             // Respond with the id of the sold ticket.
                             request.respondWithInt(ticket.getId());
@@ -348,6 +350,7 @@ public class Server implements Runnable {
         public void execute(Server obj) {
             // if the server have any Available (non reserved or sold ) ticket he should deallocate
             // them .
+            // TODO :
             if (obj.NonReservedTickets > 0) {
                 List<Ticket> ticketsToDeallocate = new ArrayList<>();
                 for (Ticket ticket : obj.getAllocatedTickets()) {
