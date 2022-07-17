@@ -42,10 +42,7 @@ public class Coordinator {
      * a Map that contains all In-termination servers.
      */
     private final HashMap<ServerId, Server> inTerminationServers = new HashMap<ServerId, Server>();
-    /**
-     * a Map that contains all In-termination servers.
-     */
-    private final HashMap<ServerId, Server> TerminatedServers = new HashMap<ServerId, Server>();
+
     /**
      * a Map that contains all servers we have.
      */
