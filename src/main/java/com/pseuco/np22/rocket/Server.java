@@ -10,7 +10,6 @@ import com.pseuco.np22.request.Request;
 import com.pseuco.np22.request.CustomerId;
 import com.pseuco.np22.request.ServerId;
 import com.pseuco.np22.rocket.Estimator.MsgAvailableServer;
-import com.pseuco.np22.rocket.Ticket.State;
 
 /**
  * Implements the server.
@@ -61,7 +60,7 @@ public class Server implements Runnable {
     private ReentrantLock serverStateLock = new ReentrantLock();
 
     /**
-     * Reservations made by customers. //TODO: I replace the List by Map
+     * Reservations made by customers.
      */
     private Map<CustomerId, Reservation> reservations = new HashMap<>();
 
@@ -70,17 +69,6 @@ public class Server implements Runnable {
      * Server/Or DB have no tickets left.
      */
     private List<Ticket> allocatedTickets = new ArrayList<Ticket>();
-
-    /**
-     * the Tickets in this List are all sold , they should not be in allocatedTickets list
-     * anymore (still not sure if we need it, we will see)
-     */
-    private List<Ticket> soldTickets = new ArrayList<Ticket>();
-
-    /**
-     * number of available tickets "non-reserved"
-     */
-    private int NonReservedTickets;
 
     /**
      * Current ticket estimation from estimator
@@ -129,18 +117,10 @@ public class Server implements Runnable {
 
     /**
      * 
-     * @return list with allocated tickets
+     * @return list with allocated available tickets
      */
     private List<Ticket> getAllocatedTickets() {
         return this.allocatedTickets;
-    }
-
-    /**
-     * 
-     * @return number of non-Reserved Tickets
-     */
-    private int getNonReservedTickets() {
-        return this.allocatedTickets.size();
     }
 
     /**
