@@ -39,9 +39,13 @@ public class Coordinator {
      */
     private final HashMap<ServerId, Server> activeServers = new HashMap<ServerId, Server>();
     /**
-     * a Map that contains all terminated servers.
+     * a Map that contains all In-termination servers.
      */
-    private final HashMap<ServerId, Server> terminatedServers = new HashMap<ServerId, Server>();
+    private final HashMap<ServerId, Server> inTerminationServers = new HashMap<ServerId, Server>();
+    /**
+     * a Map that contains all In-termination servers.
+     */
+    private final HashMap<ServerId, Server> TerminatedServers = new HashMap<ServerId, Server>();
     /**
      * a Map that contains all servers we have.
      */
@@ -51,9 +55,9 @@ public class Coordinator {
      */
     private final List<ServerId> activeServersIDs = new ArrayList<ServerId>();
     /**
-     * a List that contains the ID of all terminated servers.
+     * a List that contains the ID of all In-termination servers.
      */
-    private final List<ServerId> terminatedServersIDs = new ArrayList<ServerId>();
+    private final List<ServerId> inTerminationServersIDs = new ArrayList<ServerId>();
     /**
      * a List that contains the ID of all servers we have.
      */
@@ -183,8 +187,8 @@ public class Coordinator {
 
         Server removedServer = activeServers.remove(serverId); // remove the server from the activeServers Map
         activeServersIDs.remove(serverId); // remove the id from the activeServerIds List
-        terminatedServers.put(serverId, removedServer); // add the removed Server to the terminatedServer Map
-        terminatedServersIDs.add(serverId); // add the removed Server to the terminatedServer List
+        inTerminationServers.put(serverId, removedServer); // add the removed Server to the terminatedServer Map
+        inTerminationServersIDs.add(serverId); // add the removed Server to the terminatedServer List
         // send msgShutdown to the server
         MsgShutdown mShutdown = new MsgShutdown();
         removedServer.getMailbox().sendHighPriority(mShutdown);

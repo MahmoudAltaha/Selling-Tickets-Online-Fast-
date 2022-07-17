@@ -3,6 +3,7 @@ package com.pseuco.np22.rocket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.HashMap;
 
 import com.pseuco.np22.request.Request;
@@ -40,7 +41,7 @@ public class Server implements Runnable {
      * msgprocessrequest
      * and acting according to his state.
      */
-    private ServerState state;
+    private ServerState state = ServerState.ACTIVE;
 
     public static enum ServerState {
         /**
@@ -56,6 +57,8 @@ public class Server implements Runnable {
          */
         TERMINATED;
     }
+
+    private ReentrantLock serverStateLock = new ReentrantLock();
 
     /**
      * Reservations made by customers. //TODO: I replace the List by Map
@@ -93,7 +96,6 @@ public class Server implements Runnable {
     public Server(ServerId id, Coordinator coordinator) {
         this.id = id;
         this.coordinator = coordinator;
-        this.state = ServerState.ACTIVE;
         List<Ticket> tikets = this.coordinator.getDatabase().allocate(10);
         if (!tikets.isEmpty()) {
             for (int i = 0; i < tikets.size(); i++) {
@@ -147,7 +149,13 @@ public class Server implements Runnable {
      * @return The {@link active}
      */
     public boolean isActive() {
-        return (this.state.equals(ServerState.ACTIVE));
+        serverStateLock.lock();
+        try {
+            return (this.state.equals(ServerState.ACTIVE));
+        } finally {
+            serverStateLock.unlock();
+        }
+
     }
 
     /**
@@ -155,21 +163,38 @@ public class Server implements Runnable {
      * @return
      */
     public boolean isTerminated() {
-        return this.state.equals(ServerState.TERMINATED);
+        serverStateLock.lock();
+        try {
+            return this.state.equals(ServerState.TERMINATED);
+        } finally {
+            serverStateLock.unlock();
+        }
+
     }
 
     /**
      * set the status of the Server to non active
      */
     private void deactivateServer() {
-        this.state = ServerState.INTERMINATION;
+        serverStateLock.lock();
+        try {
+            this.state = ServerState.INTERMINATION;
+        } finally {
+            serverStateLock.unlock();
+        }
+
     }
 
     /**
      * 
      */
     private void terminateServer() {
-        this.state = ServerState.TERMINATED;
+        serverStateLock.lock();
+        try {
+            this.state = ServerState.TERMINATED;
+        } finally {
+            serverStateLock.unlock();
+        }
     }
 
     /**
