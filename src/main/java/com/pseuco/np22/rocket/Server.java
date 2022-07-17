@@ -121,7 +121,7 @@ public class Server implements Runnable {
     }
 
     /**
-     * Methode returns the number of allocated tickets "All Tickets"
+     * Methode returns the number of allocated tickets "non reserved or sold"
      */
     private int getNumAllocatedTickets() {
         return allocatedTickets.size();
@@ -367,16 +367,22 @@ public class Server implements Runnable {
         public void execute(Server obj) {
             // if the server have any Available (non reserved or sold ) ticket he should deallocate
             // them .
-            // TODO :
-            if (obj.NonReservedTickets > 0) {
-                List<Ticket> ticketsToDeallocate = new ArrayList<>();
-                for (Ticket ticket : obj.getAllocatedTickets()) {
-                    if (ticket.getState().equals(State.AVAILABLE)) {
-                        ticketsToDeallocate.add(ticket);
-                    }
-                }
-                // return the available tickets to the DB
-                obj.coordinator.getDatabase().deallocate(ticketsToDeallocate);
+            /*
+             * // TODO :
+             * if (obj.NonReservedTickets > 0) {
+             * List<Ticket> ticketsToDeallocate = new ArrayList<>();
+             * for (Ticket ticket : obj.getAllocatedTickets()) {
+             * if (ticket.getState().equals(State.AVAILABLE)) {
+             * ticketsToDeallocate.add(ticket);
+             * }
+             * }
+             * // return the available tickets to the DB
+             * obj.coordinator.getDatabase().deallocate(ticketsToDeallocate);
+             * }
+             */
+
+            if (!obj.getAllocatedTickets().isEmpty()) {
+                obj.coordinator.getDatabase().deallocate(obj.getAllocatedTickets());
             }
             // put state of active to false so the termination steps are happining now
             obj.deactivateServer();
@@ -417,13 +423,22 @@ public class Server implements Runnable {
 
             // update the estimation of tickets
             obj.setCurrentTicketEstimation(numAvailable);
-            int availableTicketAllocatedByServer = 0;
-            // find out how many available ticket the server have
-            for (Ticket ticket : obj.allocatedTickets) {
-                if (ticket.getState().equals(State.AVAILABLE)) {
-                    availableTicketAllocatedByServer++;
-                }
-            }
+
+            // respond to estimator in these steps :
+
+            // 1) find out how many available ticket the server have
+
+            /*
+             * int availableTicketAllocatedByServer = 0;
+             * for (Ticket ticket : obj.allocatedTickets) {
+             * if (ticket.getState().equals(State.AVAILABLE)) {
+             * availableTicketAllocatedByServer++;
+             * }
+             * }
+             */
+
+            int availableTicketAllocatedByServer = obj.getAllocatedTickets().size();
+
             // create he msg to send to estimator
             MsgAvailableServer msgAvailableServer = new MsgAvailableServer(obj.id, availableTicketAllocatedByServer);
             final var estimatormailbox = obj.coordinator.getEstimatorMailbox();
