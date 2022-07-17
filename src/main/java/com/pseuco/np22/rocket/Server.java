@@ -367,25 +367,13 @@ public class Server implements Runnable {
         public void execute(Server obj) {
             // if the server have any Available (non reserved or sold ) ticket he should deallocate
             // them .
-            /*
-             * // TODO :
-             * if (obj.NonReservedTickets > 0) {
-             * List<Ticket> ticketsToDeallocate = new ArrayList<>();
-             * for (Ticket ticket : obj.getAllocatedTickets()) {
-             * if (ticket.getState().equals(State.AVAILABLE)) {
-             * ticketsToDeallocate.add(ticket);
-             * }
-             * }
-             * // return the available tickets to the DB
-             * obj.coordinator.getDatabase().deallocate(ticketsToDeallocate);
-             * }
-             */
 
             if (!obj.getAllocatedTickets().isEmpty()) {
                 obj.coordinator.getDatabase().deallocate(obj.getAllocatedTickets());
             }
             // put state of active to false so the termination steps are happining now
             obj.deactivateServer();
+
             // now the server has to complete the request of already reserved tickets ,this all will
             // happen in "execute of msgprocess".
             // return the tickets of aborted reservation immediatly to the data base etc.
@@ -417,6 +405,7 @@ public class Server implements Runnable {
              * TODO: Update the number of available tickets and respond to the estimator
              * with the tickets currently available but allocated to this server.
              */
+
             // To inform the estimator, you must sent a `MsgAvailableServer` to its
             // mailbox. You can obtain this mailbox as follows:
             // final var mailbox = obj.coordinator.getEstimatorMailbox();
@@ -428,23 +417,13 @@ public class Server implements Runnable {
 
             // 1) find out how many available ticket the server have
 
-            /*
-             * int availableTicketAllocatedByServer = 0;
-             * for (Ticket ticket : obj.allocatedTickets) {
-             * if (ticket.getState().equals(State.AVAILABLE)) {
-             * availableTicketAllocatedByServer++;
-             * }
-             * }
-             */
-
             int availableTicketAllocatedByServer = obj.getAllocatedTickets().size();
 
-            // create he msg to send to estimator
+            // 2) create he msg to send to estimator
             MsgAvailableServer msgAvailableServer = new MsgAvailableServer(obj.id, availableTicketAllocatedByServer);
             final var estimatormailbox = obj.coordinator.getEstimatorMailbox();
-            // send the msg to mailbox of
+            // 3) send the msg to mailbox of estimator
             estimatormailbox.sendHighPriority(msgAvailableServer);
-
         }
     }
 
