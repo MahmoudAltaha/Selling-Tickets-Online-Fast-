@@ -220,14 +220,6 @@ public class Server implements Runnable {
          * server will process the messages sent to its mailbox.
          */
 
-        // #TODO ((wrote by mahmoud))
-        /*
-         * i was trying to figure out how the server should possibly proccess MSGs,
-         * i guess so ... then the logic in the execute methode of each msg. i still don't know
-         * why i got that Interruptedexception
-         * when i called the mailbox so i had to hadle it temporarly like that in a try catch
-         * block.
-         */
         try {
             boolean keepHandlingMsg = true;
 
