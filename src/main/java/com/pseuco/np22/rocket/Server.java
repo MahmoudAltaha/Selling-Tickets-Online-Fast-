@@ -153,6 +153,20 @@ public class Server implements Runnable {
     }
 
     /**
+     * 
+     * @return
+     */
+    public boolean isInTermination() {
+        serverStateLock.lock();
+        try {
+            return this.state.equals(ServerState.INTERMINATION);
+        } finally {
+            serverStateLock.unlock();
+        }
+
+    }
+
+    /**
      * set the status of the Server to non active
      */
     private void deactivateServer() {
@@ -265,14 +279,14 @@ public class Server implements Runnable {
                     if (obj.reservations.containsKey(customer)) {
                         // We do not allow a customer to reserve more than a ticket at a time.
                         request.respondWithError("A ticket has already been reserved!");
-                    } else if (obj.getNumAllocatedTickets() > 0 && !obj.isTerminated()) {
+                    } else if (obj.getNumAllocatedTickets() > 0 && obj.isActive()) {
                         // Take a ticket from the stack of available tickets and reserve it.
                         final var ticket = obj.getAllocatedTickets().get(0);
                         obj.reservations.put(customer, new Reservation(ticket));
                         // Respond with the id of the reserved ticket.
                         request.respondWithInt(ticket.getId());
 
-                    } else if (obj.getNumAllocatedTickets() == 0 && !obj.isTerminated()) {
+                    } else if (obj.getNumAllocatedTickets() == 0 && obj.isActive()) {
                         List<Ticket> tikets = obj.coordinator.getDatabase().allocate(10);
                         if (!tikets.isEmpty()) {
                             for (int i = 0; i < tikets.size(); i++) {
@@ -289,12 +303,10 @@ public class Server implements Runnable {
                             request.respondWithSoldOut();
                         }
 
-                    } else if (obj.isTerminated()) {
+                    } else if (obj.isInTermination()) {
                         ServerId newServerIdToHandleThisRequest = obj.coordinator.pickRandomServer();
                         request.setServerId(newServerIdToHandleThisRequest);
                         request.respondWithError("this server is down");
-                    } else {
-                        request.respondWithSoldOut();
                     }
                     break;
 
