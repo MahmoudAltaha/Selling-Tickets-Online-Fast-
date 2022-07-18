@@ -254,7 +254,7 @@ public class Server implements Runnable {
 
                 case NUM_AVAILABLE_TICKETS: {
                     // respond with an approximation of the actual number.
-                    int currentTicketEstimation = obj.currentTicketEstimation;
+                    int currentTicketEstimation = obj.currentTicketEstimation + obj.getNumAllocatedTickets();
                     request.respondWithInt(currentTicketEstimation);
 
                     break;
@@ -265,21 +265,39 @@ public class Server implements Runnable {
                     if (obj.reservations.containsKey(customer)) {
                         // We do not allow a customer to reserve more than a ticket at a time.
                         request.respondWithError("A ticket has already been reserved!");
-
-                    } else if (obj.getNumAllocatedTickets() > 0) {
-                        // Take a ticket from the list of allocatedTickets tickets and reserve it.
-                        final var ticket = obj.allocatedTickets.get(0);
-                        obj.allocatedTickets.remove(0);
+                    } else if (obj.getNumAllocatedTickets() > 0 && !obj.isTerminated()) {
+                        // Take a ticket from the stack of available tickets and reserve it.
+                        final var ticket = obj.getAllocatedTickets().get(0);
                         obj.reservations.put(customer, new Reservation(ticket));
                         // Respond with the id of the reserved ticket.
                         request.respondWithInt(ticket.getId());
-                    } else
-                        // TODO : make "if-condiation" for list obj.coordinator.getDatabase().allocate(10);
-                        // Tell the client that no tickets are available,
-                        // see the load balancer
-                        request.respondWithSoldOut();
 
+                    } else if (obj.getNumAllocatedTickets() == 0 && !obj.isTerminated()) {
+                        List<Ticket> tikets = obj.coordinator.getDatabase().allocate(10);
+                        if (!tikets.isEmpty()) {
+                            for (int i = 0; i < tikets.size(); i++) {
+                                obj.getAllocatedTickets().add(tikets.get(0));
+                            }
+                            // Take a ticket from the stack of available tickets and reserve it.
+                            final var ticket = obj.getAllocatedTickets().get(0);
+                            obj.reservations.put(customer, new Reservation(ticket));
+                            // Respond with the id of the reserved ticket.
+                            request.respondWithInt(ticket.getId());
+
+                        } else {
+                            // Tell the client that no tickets are available.
+                            request.respondWithSoldOut();
+                        }
+
+                    } else if (obj.isTerminated()) {
+                        ServerId newServerIdToHandleThisRequest = obj.coordinator.pickRandomServer();
+                        request.setServerId(newServerIdToHandleThisRequest);
+                        request.respondWithError("this server is down");
+                    } else {
+                        request.respondWithSoldOut();
+                    }
                     break;
+
                 } // TODO :we have to get the abort ticket back to data base direct, only if ther server
                   // nonactive state
                 case ABORT_PURCHASE: {
@@ -289,7 +307,6 @@ public class Server implements Runnable {
                         request.respondWithError("No ticket has been reserved!");
                     } else {
                         final var reservation = obj.reservations.get(customer);
-
                         final var ticketId = request.readInt();
                         if (ticketId.isEmpty()) {
                             // The client is supposed to provide a ticket id.
@@ -297,16 +314,21 @@ public class Server implements Runnable {
                         } else if (ticketId.get() == reservation.getTicketId()) {
                             // Abort the reservation and put the ticket back on the allocatedTickets.
                             final var ticket = reservation.abort();
-                            obj.allocatedTickets.add(ticket);
+                            if (obj.isTerminated()) {
+                                List<Ticket> Tickettolist = new ArrayList<Ticket>();
+                                Tickettolist.add(ticket);
+                                obj.coordinator.getDatabase().deallocate(Tickettolist);
+
+                            } else {
+                                obj.allocatedTickets.add(ticket);
+                            }
                             obj.reservations.remove(customer);
                             // Respond with the id of the formerly reserved ticket.
                             request.respondWithInt(ticket.getId());
-
                         } else {
                             // The id does not match the id of the reservation.
                             request.respondWithError("Invalid ticket id provided!");
                         }
-
                     }
                     break;
                 }

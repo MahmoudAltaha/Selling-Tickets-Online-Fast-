@@ -122,6 +122,9 @@ public class Balancer implements RequestHandler {
                 if (!request.getServerId().isEmpty()) {
                     // check if this server is now aktive or terminated
                     ServerId ID_associatedServerKnown = request.getServerId().orElseThrow();
+                    // TODO : to cheke if there is server active shoulld be in server class, and rspond to the
+                    // client withh error and send the request to other active server (scaling 2.2.6 in 4/9
+                    // "b")
                     boolean isServerStillActive = this.coordinator.getActiveServerIds()
                             .contains(ID_associatedServerKnown);
                     if (isServerStillActive) {
