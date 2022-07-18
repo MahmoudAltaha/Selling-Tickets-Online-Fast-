@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.pseuco.np22.request.ServerId;
 import com.pseuco.np22.rocket.Server.MsgTicketsAvailable;
@@ -103,11 +104,9 @@ public class Estimator implements Runnable {
             int numberOfTicketInServers = 0;
 
             for (ServerId serverId : nonTerminatedServersIds) {
-                Iterator it = serverEstimations.entrySet().iterator();
-                while (it.hasNext()) {
-                    ServerId sID = (ServerId) it.next();
-                    if (!sID.equals(serverId)) {
-                        numberOfTicketInServers = numberOfTicketInServers + serverEstimations.get(serverId);
+                for (ServerId id : serverEstimations.keySet()) {
+                    if (!id.equals(serverId)) {
+                        numberOfTicketInServers = numberOfTicketInServers + serverEstimations.get(id);
                     }
                 }
                 // create the msg to send
