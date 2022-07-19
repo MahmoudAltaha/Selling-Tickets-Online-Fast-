@@ -37,28 +37,28 @@ public class Coordinator {
     /**
      * a Map that contains all active servers we have.
      */
-    private final HashMap<ServerId, Server> activeServers = new HashMap<ServerId, Server>();
+    private HashMap<ServerId, Server> activeServers = new HashMap<ServerId, Server>();
     /**
      * a Map that contains all In-termination servers.
      */
-    private final HashMap<ServerId, Server> inTerminationServers = new HashMap<ServerId, Server>();
+    private HashMap<ServerId, Server> inTerminationServers = new HashMap<ServerId, Server>();
 
     /**
      * a Map that contains all servers we have.
      */
-    private final HashMap<ServerId, Server> allServers = new HashMap<ServerId, Server>();
+    private HashMap<ServerId, Server> allServers = new HashMap<ServerId, Server>();
     /**
      * a List that contains the ID of all active servers we have.
      */
-    private final List<ServerId> activeServersIDs = new ArrayList<ServerId>();
+    private List<ServerId> activeServersIDs = new ArrayList<ServerId>();
     /**
      * a List that contains the ID of all In-termination servers.
      */
-    private final List<ServerId> inTerminationServersIDs = new ArrayList<ServerId>();
+    private List<ServerId> inTerminationServersIDs = new ArrayList<ServerId>();
     /**
      * a List that contains the ID of all servers we have.
      */
-    private final List<ServerId> allServersIDs = new ArrayList<ServerId>();
+    private List<ServerId> allServersIDs = new ArrayList<ServerId>();
 
     private ReentrantLock coordinatorLock = new ReentrantLock();
 

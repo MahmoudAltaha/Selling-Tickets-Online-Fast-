@@ -30,7 +30,7 @@ public class Estimator implements Runnable {
     /**
      * map which contains the serverID and the estimation we got from that server.
      */
-    private final HashMap<ServerId, Integer> serverEstimations = new HashMap<>();
+    private HashMap<ServerId, Integer> serverEstimations = new HashMap<>();
 
     /**
      * Constructs a new {@link Estimator}.

@@ -275,13 +275,13 @@ public class Server implements Runnable {
                 }
                 case RESERVE_TICKET: {
 
-                    final var customer = request.getCustomerId();
+                    var customer = request.getCustomerId();
                     if (obj.reservations.containsKey(customer)) {
                         // We do not allow a customer to reserve more than a ticket at a time.
                         request.respondWithError("A ticket has already been reserved!");
                     } else if (obj.getNumAllocatedTickets() > 0 && obj.isActive()) {
                         // Take a ticket from the stack of available tickets and reserve it.
-                        final var ticket = obj.getAllocatedTickets().get(0);
+                        var ticket = obj.getAllocatedTickets().get(0);
                         obj.reservations.put(customer, new Reservation(ticket));
                         // Respond with the id of the reserved ticket.
                         request.respondWithInt(ticket.getId());
@@ -293,7 +293,7 @@ public class Server implements Runnable {
                                 obj.getAllocatedTickets().add(tikets.get(0));
                             }
                             // Take a ticket from the stack of available tickets and reserve it.
-                            final var ticket = obj.getAllocatedTickets().get(0);
+                            var ticket = obj.getAllocatedTickets().get(0);
                             obj.reservations.put(customer, new Reservation(ticket));
                             // Respond with the id of the reserved ticket.
                             request.respondWithInt(ticket.getId());
@@ -313,19 +313,19 @@ public class Server implements Runnable {
                 } // TODO :we have to get the abort ticket back to data base direct, only if ther server
                   // nonactive state
                 case ABORT_PURCHASE: {
-                    final var customer = request.getCustomerId();
+                    var customer = request.getCustomerId();
                     if (!obj.reservations.containsKey(customer)) {
                         // Without a reservation there is nothing to abort.
                         request.respondWithError("No ticket has been reserved!");
                     } else {
-                        final var reservation = obj.reservations.get(customer);
-                        final var ticketId = request.readInt();
+                        var reservation = obj.reservations.get(customer);
+                        var ticketId = request.readInt();
                         if (ticketId.isEmpty()) {
                             // The client is supposed to provide a ticket id.
                             request.respondWithError("No ticket id provided!");
                         } else if (ticketId.get() == reservation.getTicketId()) {
                             // Abort the reservation and put the ticket back on the allocatedTickets.
-                            final var ticket = reservation.abort();
+                            var ticket = reservation.abort();
                             if (obj.isInTermination()) {
                                 List<Ticket> Tickettolist = new ArrayList<Ticket>();
                                 Tickettolist.add(ticket);
@@ -345,19 +345,19 @@ public class Server implements Runnable {
                     break;
                 }
                 case BUY_TICKET: {
-                    final var customer = request.getCustomerId();
+                    var customer = request.getCustomerId();
                     if (!obj.reservations.containsKey(customer)) {
                         // Without a reservation there is nothing to buy.
                         request.respondWithError("No ticket has been reserved!");
                     } else {
-                        final var reservation = obj.reservations.get(customer);
-                        final var ticketId = request.readInt();
+                        var reservation = obj.reservations.get(customer);
+                        var ticketId = request.readInt();
                         if (ticketId.isEmpty()) {
                             // The client is supposed to provide a ticket id.
                             request.respondWithError("No ticket id provided!");
                         } else if (ticketId.get() == reservation.getTicketId()) {
                             // Sell the ticket to the customer.
-                            final var ticket = reservation.sell();
+                            var ticket = reservation.sell();
                             obj.reservations.remove(customer);
                             // Respond with the id of the sold ticket.
                             request.respondWithInt(ticket.getId());

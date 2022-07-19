@@ -88,7 +88,7 @@ public class Balancer implements RequestHandler {
                  * 
                  * Hint: Use `respondWithServerIds`.
                  */
-                final Iterable<ServerId> ids;
+                Iterable<ServerId> ids;
                 ids = this.coordinator.getActiveServerIds();
                 request.respondWithServerIds(ids);
             }
