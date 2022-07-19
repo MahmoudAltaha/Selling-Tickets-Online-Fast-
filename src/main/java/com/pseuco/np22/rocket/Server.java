@@ -437,7 +437,7 @@ public class Server implements Runnable {
             int availableTicketAllocatedByServer = obj.getAllocatedTickets().size();
 
             // 2) create he msg to send to estimator
-            Command<Estimator> msgAvailableServer = new MsgAvailableServer(obj.id, availableTicketAllocatedByServer);
+            MsgAvailableServer msgAvailableServer = new MsgAvailableServer(obj.id, availableTicketAllocatedByServer);
             var estimatormailbox = obj.coordinator.getEstimatorMailbox();
             // 3) send the msg to mailbox of estimator
             estimatormailbox.sendHighPriority(msgAvailableServer);
