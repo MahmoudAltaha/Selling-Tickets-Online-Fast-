@@ -98,15 +98,15 @@ public class Mailbox<M> {
             while ((LowMailBox.isEmpty() && HighMailBox.isEmpty())) {
                 IsMailboxFreeToAccess.await();
             }
-            M message = null;
+            Command<Server> message = null;
 
             if (HighMailBox.size() > 0) {
-                message = HighMailBox.poll();
+                message = (Command<Server>) HighMailBox.poll();
             } else if (LowMailBox.size() > 0) {
-                message = LowMailBox.poll();
+                message = (Command<Server>) LowMailBox.poll();
             }
 
-            return message;
+            return null;
         } finally {
             MailboxLock.unlock();
         }
@@ -128,13 +128,13 @@ public class Mailbox<M> {
         MailboxLock.lock();
 
         try {
-            M message = null;
+            Command<Estimator> message = null;
             if (HighMailBox.size() > 0) {
-                message = HighMailBox.poll();
+                message = (Command<Estimator>) HighMailBox.poll();
             } else if (LowMailBox.size() > 0) {
-                message = LowMailBox.poll();
+                message = (Command<Estimator>) LowMailBox.poll();
             }
-            return message;
+            return null;
         } finally {
             MailboxLock.unlock();
         }
