@@ -89,7 +89,7 @@ public class Balancer implements RequestHandler {
                                 System.out.println("Done" + newNumber);
                                 // In this case there is no need to scale of the number of servers
                             } else {
-                                request.respondWithError("No number of servers provided!");
+                                request.respondWithInt(this.coordinator.getNumOfServers());
                             }
                             break;
                         }
