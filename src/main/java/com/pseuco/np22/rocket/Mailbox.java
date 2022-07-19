@@ -1,7 +1,5 @@
 package com.pseuco.np22.rocket;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.PriorityQueue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -13,16 +11,19 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Mailbox<M> {
 
-    private ArrayList<M> LowMailBox = new ArrayList<M>();
-    private ArrayList<M> HighMailBox = new ArrayList<M>();
-    private ReentrantLock MailboxLock = new ReentrantLock();
-    private Condition IsMailboxFreeToAccess = MailboxLock.newCondition();
+    private PriorityQueue<M> LowMailBox;
+    private PriorityQueue<M> HighMailBox;
+    private ReentrantLock MailboxLock;
+    private Condition IsMailboxFreeToAccess;
 
     /**
      * Constructs a new empty {@link Mailbox}.
      */
     public Mailbox() {
-
+        this.LowMailBox = new PriorityQueue<>();
+        this.HighMailBox = new PriorityQueue<>();
+        this.MailboxLock = new ReentrantLock();
+        this.IsMailboxFreeToAccess = MailboxLock.newCondition();
     }
 
     /**
@@ -90,9 +91,9 @@ public class Mailbox<M> {
      * @return The received message.
      * @throws InterruptedException The thread has been interrupted.
      */
-    public M recv() throws InterruptedException {
-        // TODO ((mahmoud still not understand the dif. between
-        // blocking and not))
+    public M recv() throws InterruptedException { // TODO ((mahmoud still not understand the dif. between
+                                                  // blocking and
+        // not))
         MailboxLock.lock();
         try {
             while ((LowMailBox.isEmpty() && HighMailBox.isEmpty())) {
@@ -101,10 +102,10 @@ public class Mailbox<M> {
             M message = null;
 
             if (HighMailBox.size() > 0) {
-                message = HighMailBox.get(0);
+                message = HighMailBox.poll();
 
             } else if (LowMailBox.size() > 0) {
-                message = LowMailBox.get(0);
+                message = LowMailBox.poll();
 
             }
 
@@ -132,9 +133,9 @@ public class Mailbox<M> {
         try {
             M message = null;
             if (HighMailBox.size() > 0) {
-                message = HighMailBox.get(0);
+                message = HighMailBox.poll();
             } else if (LowMailBox.size() > 0) {
-                message = LowMailBox.get(0);
+                message = LowMailBox.poll();
             }
             return message;
         } finally {
