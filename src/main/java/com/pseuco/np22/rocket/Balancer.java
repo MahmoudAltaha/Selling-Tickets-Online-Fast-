@@ -106,6 +106,7 @@ public class Balancer implements RequestHandler {
                     Iterable<ServerId> ids;
                     ids = this.coordinator.getActiveServerIds();
                     request.respondWithServerIds(ids);
+                    break;
                 }
 
                 case DEBUG: {
