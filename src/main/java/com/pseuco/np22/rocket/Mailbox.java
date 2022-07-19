@@ -50,7 +50,7 @@ public class Mailbox<M> {
     public boolean sendLowPriority(M message) {
         MailboxLock.lock();
         try {
-            boolean messageAdd = LowMailBox.add(message);
+            boolean messageAdd = LowMailBox.offer(message);
             IsMailboxFreeToAccess.signal();
             return messageAdd;
 
@@ -69,7 +69,7 @@ public class Mailbox<M> {
     public boolean sendHighPriority(M message) {
         MailboxLock.lock();
         try {
-            boolean messageAdd = HighMailBox.add(message);
+            boolean messageAdd = HighMailBox.offer(message);
             IsMailboxFreeToAccess.signal();
             return messageAdd;
 
