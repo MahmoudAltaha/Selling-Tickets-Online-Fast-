@@ -87,7 +87,7 @@ public class Server implements Runnable {
         List<Ticket> tikets = this.coordinator.getDatabase().allocate(10);
         if (!tikets.isEmpty()) {
             for (int i = 0; i < tikets.size(); i++) {
-                this.getAllocatedTickets().add(tikets.get(0));
+                this.getAllocatedTickets().add(tikets.remove(0));
             }
         }
     }
@@ -284,7 +284,7 @@ public class Server implements Runnable {
                         request.respondWithError("A ticket has already been reserved!");
                     } else if (obj.getNumAllocatedTickets() > 0 && obj.isActive()) {
                         // Take a ticket from the stack of available tickets and reserve it.
-                        var ticket = obj.getAllocatedTickets().get(0);
+                        var ticket = obj.getAllocatedTickets().remove(0);
                         obj.reservations.put(customer, new Reservation(ticket));
                         // Respond with the id of the reserved ticket.
                         request.respondWithInt(ticket.getId());
@@ -293,10 +293,10 @@ public class Server implements Runnable {
                         List<Ticket> tikets = obj.coordinator.getDatabase().allocate(10);
                         if (!tikets.isEmpty()) {
                             for (int i = 0; i < tikets.size(); i++) {
-                                obj.getAllocatedTickets().add(tikets.get(0));
+                                obj.getAllocatedTickets().add(tikets.remove(0));
                             }
                             // Take a ticket from the stack of available tickets and reserve it.
-                            var ticket = obj.getAllocatedTickets().get(0);
+                            var ticket = obj.getAllocatedTickets().remove(0);
                             obj.reservations.put(customer, new Reservation(ticket));
                             // Respond with the id of the reserved ticket.
                             request.respondWithInt(ticket.getId());
