@@ -109,6 +109,7 @@ public class Estimator implements Runnable {
                         numberOfTicketInServers = numberOfTicketInServers + serverEstimations.get(id);
                     }
                 }
+
                 // create the msg to send
                 int endEstimation = numberOfTicketInServers + numberofTicketsInDB;
                 Command<Server> msgTicketsAvailable = new MsgTicketsAvailable(endEstimation);

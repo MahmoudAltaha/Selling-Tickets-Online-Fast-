@@ -91,8 +91,9 @@ public class Mailbox<M> {
      * @return The received message.
      * @throws InterruptedException The thread has been interrupted.
      */
-    public M recv() throws InterruptedException { // TODO ((mahmoud still not understand the dif. between blocking and
-                                                  // not))
+    public Command<Server> recv() throws InterruptedException { // TODO ((mahmoud still not understand the dif. between
+                                                                // blocking and
+        // not))
         MailboxLock.lock();
         try {
             while ((LowMailBox.isEmpty() && HighMailBox.isEmpty())) {
@@ -102,8 +103,10 @@ public class Mailbox<M> {
 
             if (HighMailBox.size() > 0) {
                 message = (Command<Server>) HighMailBox.poll();
+                return message;
             } else if (LowMailBox.size() > 0) {
                 message = (Command<Server>) LowMailBox.poll();
+                return message;
             }
 
             return null;
@@ -124,15 +127,17 @@ public class Mailbox<M> {
      * 
      * @return The received message or {@code null} in case the {@link Mailbox} is empty.
      */
-    public M tryRecv() {
+    public Command<Estimator> tryRecv() {
         MailboxLock.lock();
 
         try {
             Command<Estimator> message = null;
             if (HighMailBox.size() > 0) {
                 message = (Command<Estimator>) HighMailBox.poll();
+                return message;
             } else if (LowMailBox.size() > 0) {
                 message = (Command<Estimator>) LowMailBox.poll();
+                return message;
             }
             return null;
         } finally {
