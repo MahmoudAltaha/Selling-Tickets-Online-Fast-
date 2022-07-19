@@ -68,7 +68,7 @@ public class Server implements Runnable {
      * List of allocated tickets from DB. //TODO think about allocateing tickets in case
      * Server/Or DB have no tickets left.
      */
-    private List<Ticket> allocatedTickets = new ArrayList<Ticket>();
+    private List<Ticket> allocatedTickets = new ArrayList<>();
 
     /**
      * Current ticket estimation from estimator
@@ -84,12 +84,7 @@ public class Server implements Runnable {
     public Server(ServerId id, Coordinator coordinator) {
         this.id = id;
         this.coordinator = coordinator;
-        List<Ticket> tikets = this.coordinator.getDatabase().allocate(10);
-        if (!tikets.isEmpty()) {
-            for (int i = 0; i < tikets.size(); i++) {
-                this.getAllocatedTickets().add(tikets.remove(0));
-            }
-        }
+
     }
 
     /**
@@ -216,6 +211,18 @@ public class Server implements Runnable {
 
         try {
             boolean keepHandlingMsg = true;
+            List<Ticket> tikets = new ArrayList<>();
+            tikets = this.coordinator.getDatabase().allocate(10);
+            System.out.println("Size of returend List from Server is : " + tikets.size());
+            if (!tikets.isEmpty()) {
+                System.out.println("Size of returend List from Server is agaaaaain : " + tikets.size());
+                int stodForLoop = tikets.size();
+                System.out.println("Size of returend List from Server is agaaaaain : " + tikets.size());
+                for (int i = 0; i < stodForLoop; i++) {
+                    this.allocatedTickets.add(tikets.remove(0));
+                    System.out.print("Hiere is ticket to add" + i);
+                }
+            }
 
             while (keepHandlingMsg) {
                 Command<Server> message = (Command<Server>) getMailbox().recv();
@@ -231,6 +238,7 @@ public class Server implements Runnable {
             // the server was in Terminating state and he has finished handling existing requests so
             // he could now terminate
             this.terminateServer();
+            System.out.println("bevor terminated" + getNumAllocatedTickets());
             Thread.currentThread().interrupt();
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
@@ -290,17 +298,17 @@ public class Server implements Runnable {
                         request.respondWithInt(ticket.getId());
 
                     } else if (obj.getNumAllocatedTickets() == 0 && obj.isActive()) {
-                        List<Ticket> tikets = obj.coordinator.getDatabase().allocate(10);
-                        if (!tikets.isEmpty()) {
-                            for (int i = 0; i < tikets.size(); i++) {
-                                obj.getAllocatedTickets().add(tikets.remove(0));
-                            }
-                            // Take a ticket from the stack of available tickets and reserve it.
-                            var ticket = obj.getAllocatedTickets().remove(0);
-                            obj.reservations.put(customer, new Reservation(ticket));
-                            // Respond with the id of the reserved ticket.
-                            request.respondWithInt(ticket.getId());
+                        List<Ticket> tikets = new ArrayList<>();
+                        tikets = obj.coordinator.getDatabase().allocate(10);
 
+                        if (!tikets.isEmpty()) {
+
+                            int stodForLoop = tikets.size();
+
+                            for (int i = 0; i < stodForLoop; i++) {
+                                obj.allocatedTickets.add(tikets.remove(0));
+
+                            }
                         } else {
                             // Tell the client that no tickets are available.
                             request.respondWithSoldOut();

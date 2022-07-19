@@ -63,18 +63,20 @@ public class Database {
         ticketLock.lock();
         try {
             List<Ticket> AllocatedTickets = new ArrayList<>();
-            Ticket ticket = null;
+            Ticket ticket;
 
             // if there is no tickets in Data Base
             if (this.getNumAvailable() == 0) {
                 return AllocatedTickets;
                 // if there are tickets in Data Base as I asked
             } else if (numTickets <= this.getNumAvailable()) {
+                System.out.print("Number of oreder from the server : " + numTickets);
                 for (int i = 0; i < numTickets; i++) {
                     ticket = unallocated.remove(0);
                     numAvailable--;
                     AllocatedTickets.add(ticket);
                 }
+                System.out.println("Size of returend List from DB is : " + AllocatedTickets.size());
                 return AllocatedTickets;
                 // if there are tickets but not as I asked
             } else {
@@ -83,6 +85,7 @@ public class Database {
                     numAvailable--;
                     AllocatedTickets.add(ticket);
                 }
+
                 return AllocatedTickets;
             }
         } finally {
