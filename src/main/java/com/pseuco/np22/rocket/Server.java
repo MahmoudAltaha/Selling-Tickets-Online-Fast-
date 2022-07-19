@@ -218,7 +218,7 @@ public class Server implements Runnable {
             boolean keepHandlingMsg = true;
 
             while (keepHandlingMsg) {
-                Command<Server> message = getMailbox().recv();
+                Command<Server> message = (Command<Server>) getMailbox().recv();
                 assert (message != null);
                 // make sure that the mailbox did not returns a null msg to avoid calling execute on null
                 if (message != null) {

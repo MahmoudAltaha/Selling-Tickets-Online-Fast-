@@ -96,7 +96,7 @@ public class Estimator implements Runnable {
             // read the msgs to estimate from each server that is still not terminated....in first
             // round it is empty.
             while (!this.getMailbox().isEmpty()) {
-                Command<Estimator> msg = this.getMailbox().tryRecv();
+                Command<Estimator> msg = (Command<Estimator>) this.getMailbox().tryRecv();
                 assert (msg != null);
                 msg.execute(this);
             }
