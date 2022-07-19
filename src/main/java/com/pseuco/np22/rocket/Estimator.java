@@ -116,7 +116,7 @@ public class Estimator implements Runnable {
                 var mailboxofserver = this.coordinator.getServerMailbox(serverId);
                 mailboxofserver.sendHighPriority(msgTicketsAvailable);
                 // TODO: mohamuuud code
-                // nonTerminatedServers.get(serverId).getMailbox().sendHighPriority(msgTicketsAvailable);
+                // nonTerminatedServers.get(serverId)..getMailbox().sendHighPriority(msgTicketsAvailable);
             }
 
             // wait 10/ nonTerminatedServers.Size */

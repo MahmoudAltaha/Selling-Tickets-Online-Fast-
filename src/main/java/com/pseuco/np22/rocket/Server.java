@@ -326,7 +326,7 @@ public class Server implements Runnable {
                         } else if (ticketId.get() == reservation.getTicketId()) {
                             // Abort the reservation and put the ticket back on the allocatedTickets.
                             final var ticket = reservation.abort();
-                            if (obj.isTerminated()) {
+                            if (obj.isInTermination()) {
                                 List<Ticket> Tickettolist = new ArrayList<Ticket>();
                                 Tickettolist.add(ticket);
                                 obj.coordinator.getDatabase().deallocate(Tickettolist);

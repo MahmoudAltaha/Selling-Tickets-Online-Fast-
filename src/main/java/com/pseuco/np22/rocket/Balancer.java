@@ -121,7 +121,7 @@ public class Balancer implements RequestHandler {
                 // check if the request of client is worked from known Server
                 if (!request.getServerId().isEmpty()) {
                     // check if this server is now aktive or terminated
-                    ServerId ID_associatedServerKnown = request.getServerId().orElseThrow();
+                    ServerId ID_associatedServerKnown = request.getServerId().get();
                     // TODO : to cheke if there is server active shoulld be in server class, and rspond to the
                     // client withh error and send the request to other active server (scaling 2.2.6 in 4/9
                     // "b")
@@ -133,6 +133,18 @@ public class Balancer implements RequestHandler {
                         var mailBoxOfassociatedServerKnown = this.coordinator
                                 .getServerMailbox(ID_associatedServerKnown);
                         mailBoxOfassociatedServerKnown.sendLowPriority(message);
+                    } else {
+                        // get random server from the list of active servers
+                        ServerId associatedServerID = this.coordinator.pickRandomServer();
+                        // correlate a customar with specific server
+                        request.setServerId(associatedServerID);
+                        // constructing MsgProcessRequest with request
+                        MsgProcessRequest message = new MsgProcessRequest(request);
+                        // get the mail box of this picked server
+                        var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
+                        // send this message with low priority
+                        mailBoxOfPickedServer.sendLowPriority(message);
+
                     }
                     // if the rquest of client is new or the previous server is terminated, so then obtain a
                     // random active server to handle this request
