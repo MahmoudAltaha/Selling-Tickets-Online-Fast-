@@ -13,19 +13,16 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Mailbox<M> {
 
-    private ArrayList<M> LowMailBox;
-    private ArrayList<M> HighMailBox;
-    private ReentrantLock MailboxLock;
-    private Condition IsMailboxFreeToAccess;
+    private ArrayList<M> LowMailBox = new ArrayList<M>();;
+    private ArrayList<M> HighMailBox = new ArrayList<M>();;
+    private ReentrantLock MailboxLock = new ReentrantLock();;
+    private Condition IsMailboxFreeToAccess = MailboxLock.newCondition();;
 
     /**
      * Constructs a new empty {@link Mailbox}.
      */
     public Mailbox() {
-        this.LowMailBox = new ArrayList<>();
-        this.HighMailBox = new ArrayList<>();
-        this.MailboxLock = new ReentrantLock();
-        this.IsMailboxFreeToAccess = MailboxLock.newCondition();
+
     }
 
     /**
