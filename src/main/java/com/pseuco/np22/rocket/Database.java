@@ -40,9 +40,9 @@ public class Database {
      */
     public int getNumAvailable() {
         ticketLock.lock();
-        try{
+        try {
             return numAvailable;
-        }finally{
+        } finally {
             ticketLock.unlock();
         }
     }
@@ -61,35 +61,33 @@ public class Database {
      */
     public List<Ticket> allocate(final int numTickets) {
         ticketLock.lock();
-        try{
+        try {
             List<Ticket> AllocatedTickets = new ArrayList<>();
             Ticket ticket = null;
-        
+
             // if there is no tickets in Data Base
-            if (numAvailable == 0) {
+            if (this.getNumAvailable() == 0) {
                 return AllocatedTickets;
                 // if there are tickets in Data Base as I asked
-            } else if (numTickets <= numAvailable) {    
-             for (int i = 0; i < numTickets; i++) {
-                 ticket = unallocated.get(0);
-                 unallocated.remove(0);
-                 numAvailable--;
-                 AllocatedTickets.add(ticket);
+            } else if (numTickets <= this.getNumAvailable()) {
+                for (int i = 0; i < numTickets; i++) {
+                    ticket = unallocated.remove(0);
+                    numAvailable--;
+                    AllocatedTickets.add(ticket);
                 }
-               return AllocatedTickets;
-               // if there are tickets but not as I asked
+                return AllocatedTickets;
+                // if there are tickets but not as I asked
             } else {
-             for (int i = 0; i < numAvailable; i++) {
-                   ticket = unallocated.get(0);
-                   unallocated.remove(0);
-                   numAvailable--;
-                  AllocatedTickets.add(ticket);
+                for (int i = 0; i < this.getNumAvailable(); i++) {
+                    ticket = unallocated.remove(0);
+                    numAvailable--;
+                    AllocatedTickets.add(ticket);
                 }
-             return AllocatedTickets;
+                return AllocatedTickets;
             }
-        }finally{
+        } finally {
             ticketLock.unlock();
-        }  
+        }
     }
 
     /**
@@ -99,16 +97,16 @@ public class Database {
      */
     public void deallocate(final Iterable<Ticket> tickets) {
         ticketLock.lock();
-        try{
-             // add all tickets in unallocated List
+        try {
+            // add all tickets in unallocated List
             tickets.forEach((ticket) -> {
                 unallocated.add(ticket);
                 numAvailable++;
             });
 
-        }finally{
+        } finally {
             ticketLock.unlock();
         }
-       
+
     }
 }
