@@ -257,13 +257,13 @@ public class Coordinator {
              * list of active servers.
              */
             else if (numServers < activeServers.size()) {
-                int numOfServersToRemove = numServers - activeServers.size();
+                int numOfServersToRemove = activeServers.size() - numServers;
                 for (int i = 0; i < numOfServersToRemove; i++) {
                     removeServer(activeServersIDs.remove(0));
                     System.out.println("removed server " + i);
                 }
             }
-            return numServers;
+            return this.getNumOfServers();
         } finally {
             this.coordinatorLock.unlock();
         }
