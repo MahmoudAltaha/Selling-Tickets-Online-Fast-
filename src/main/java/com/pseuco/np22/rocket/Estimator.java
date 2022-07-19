@@ -97,6 +97,7 @@ public class Estimator implements Runnable {
             // round it is empty.
             while (!this.getMailbox().isEmpty()) {
                 Command<Estimator> msg = this.getMailbox().tryRecv();
+                assert (msg != null);
                 msg.execute(this);
             }
             // send all servers the estimation number (except the number of ticket the server we send
@@ -113,7 +114,7 @@ public class Estimator implements Runnable {
                 // create the msg to send
                 int endEstimation = numberOfTicketInServers + numberofTicketsInDB;
                 Command<Server> msgTicketsAvailable = new MsgTicketsAvailable(endEstimation);
-                // nonTerminatedServers.get(serverId).getMailbox().sendHighPriority(msgTicketsAvailable);
+                nonTerminatedServers.get(serverId).getMailbox().sendHighPriority(msgTicketsAvailable);
             }
 
             // wait 10/ nonTerminatedServers.Size */
