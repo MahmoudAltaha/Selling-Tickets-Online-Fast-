@@ -1,5 +1,7 @@
 package com.pseuco.np22.rocket;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -11,8 +13,8 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Mailbox<M> {
 
-    private PriorityQueue<M> LowMailBox;
-    private PriorityQueue<M> HighMailBox;
+    private ArrayList<M> LowMailBox;
+    private ArrayList<M> HighMailBox;
     private ReentrantLock MailboxLock;
     private Condition IsMailboxFreeToAccess;
 
@@ -20,8 +22,8 @@ public class Mailbox<M> {
      * Constructs a new empty {@link Mailbox}.
      */
     public Mailbox() {
-        this.LowMailBox = new PriorityQueue<>();
-        this.HighMailBox = new PriorityQueue<>();
+        this.LowMailBox = new ArrayList<>();
+        this.HighMailBox = new ArrayList<>();
         this.MailboxLock = new ReentrantLock();
         this.IsMailboxFreeToAccess = MailboxLock.newCondition();
     }
@@ -102,10 +104,10 @@ public class Mailbox<M> {
             M message = null;
 
             if (HighMailBox.size() > 0) {
-                message = HighMailBox.poll();
+                message = HighMailBox.get(0);
 
             } else if (LowMailBox.size() > 0) {
-                message = LowMailBox.poll();
+                message = LowMailBox.get(0);
 
             }
 
@@ -133,9 +135,9 @@ public class Mailbox<M> {
         try {
             M message = null;
             if (HighMailBox.size() > 0) {
-                message = HighMailBox.poll();
+                message = HighMailBox.get(0);
             } else if (LowMailBox.size() > 0) {
-                message = LowMailBox.poll();
+                message = LowMailBox.get(0);
             }
             return message;
         } finally {
