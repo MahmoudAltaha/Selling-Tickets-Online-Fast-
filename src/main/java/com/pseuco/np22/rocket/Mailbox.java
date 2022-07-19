@@ -91,25 +91,25 @@ public class Mailbox<M> {
      * @return The received message.
      * @throws InterruptedException The thread has been interrupted.
      */
-    public Command<Server> recv() throws InterruptedException { // TODO ((mahmoud still not understand the dif. between
-                                                                // blocking and
+    public M recv() throws InterruptedException { // TODO ((mahmoud still not understand the dif. between
+                                                  // blocking and
         // not))
         MailboxLock.lock();
         try {
             while ((LowMailBox.isEmpty() && HighMailBox.isEmpty())) {
                 IsMailboxFreeToAccess.await();
             }
-            Command<Server> message = null;
+            M message = null;
 
             if (HighMailBox.size() > 0) {
-                message = (Command<Server>) HighMailBox.poll();
-                return message;
+                message = HighMailBox.poll();
+
             } else if (LowMailBox.size() > 0) {
-                message = (Command<Server>) LowMailBox.poll();
-                return message;
+                message = LowMailBox.poll();
+
             }
 
-            return null;
+            return message;
         } finally {
             MailboxLock.unlock();
         }
@@ -127,19 +127,17 @@ public class Mailbox<M> {
      * 
      * @return The received message or {@code null} in case the {@link Mailbox} is empty.
      */
-    public Command<Estimator> tryRecv() {
+    public M tryRecv() {
         MailboxLock.lock();
 
         try {
-            Command<Estimator> message = null;
+            M message = null;
             if (HighMailBox.size() > 0) {
-                message = (Command<Estimator>) HighMailBox.poll();
-                return message;
+                message = HighMailBox.poll();
             } else if (LowMailBox.size() > 0) {
-                message = (Command<Estimator>) LowMailBox.poll();
-                return message;
+                message = LowMailBox.poll();
             }
-            return null;
+            return message;
         } finally {
             MailboxLock.unlock();
         }
