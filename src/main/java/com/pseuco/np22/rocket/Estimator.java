@@ -111,12 +111,8 @@ public class Estimator implements Runnable {
                 }
                 // create the msg to send
                 int endEstimation = numberOfTicketInServers + numberofTicketsInDB;
-                MsgTicketsAvailable msgTicketsAvailable = new MsgTicketsAvailable(endEstimation);
-                // TODO: Mohamaaaad code
-                var mailboxofserver = this.coordinator.getServerMailbox(serverId);
-                mailboxofserver.sendHighPriority(msgTicketsAvailable);
-                // TODO: mohamuuud code
-                // nonTerminatedServers.get(serverId)..getMailbox().sendHighPriority(msgTicketsAvailable);
+                Command<Server> msgTicketsAvailable = new MsgTicketsAvailable(endEstimation);
+                nonTerminatedServers.get(serverId).getMailbox().sendHighPriority(msgTicketsAvailable);
             }
 
             // wait 10/ nonTerminatedServers.Size */

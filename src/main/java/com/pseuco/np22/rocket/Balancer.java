@@ -129,7 +129,7 @@ public class Balancer implements RequestHandler {
                             .contains(ID_associatedServerKnown);
                     if (isServerStillActive) {
                         // constructing MsgProcessRequest with request
-                        MsgProcessRequest message = new MsgProcessRequest(request);
+                        Command<Server> message = new MsgProcessRequest(request);
                         var mailBoxOfassociatedServerKnown = this.coordinator
                                 .getServerMailbox(ID_associatedServerKnown);
                         mailBoxOfassociatedServerKnown.sendLowPriority(message);
@@ -139,7 +139,7 @@ public class Balancer implements RequestHandler {
                         // correlate a customar with specific server
                         request.setServerId(associatedServerID);
                         // constructing MsgProcessRequest with request
-                        MsgProcessRequest message = new MsgProcessRequest(request);
+                        Command<Server> message = new MsgProcessRequest(request);
                         // get the mail box of this picked server
                         var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
                         // send this message with low priority
@@ -156,7 +156,7 @@ public class Balancer implements RequestHandler {
                     // correlate a customar with specific server
                     request.setServerId(associatedServerID);
                     // constructing MsgProcessRequest with request
-                    MsgProcessRequest message = new MsgProcessRequest(request);
+                    Command<Server> message = new MsgProcessRequest(request);
                     // get the mail box of this picked server
                     var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
                     // send this message with low priority

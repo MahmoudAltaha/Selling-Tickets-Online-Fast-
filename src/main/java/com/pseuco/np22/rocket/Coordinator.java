@@ -187,7 +187,7 @@ public class Coordinator {
         inTerminationServers.put(serverId, removedServer); // add the removed Server to the terminatedServer Map
         inTerminationServersIDs.add(serverId); // add the removed Server to the terminatedServer List
         // send msgShutdown to the server
-        MsgShutdown mShutdown = new MsgShutdown();
+        Command<Server> mShutdown = new MsgShutdown();
         removedServer.getMailbox().sendHighPriority(mShutdown);
 
     }
