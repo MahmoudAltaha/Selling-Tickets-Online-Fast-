@@ -67,22 +67,24 @@ public class Balancer implements RequestHandler {
                              */
                             int numberofActiveServers = this.coordinator.getNumOfServers();
                             request.respondWithInt(numberofActiveServers);
+                            break;
                         }
                         case POST: {
+                            System.out.println("balancer");
                             /*
                              * Obtain the new number of servers from the request using
                              * `readInt`, scale to the given number of servers, and finally
                              * respond with the new number of servers.
                              */
-                            int numberOfServer;
+
                             if (!request.readInt().isEmpty()) {
-                                numberOfServer = request.readInt().get();
-                                this.coordinator.scale(numberOfServer);
-                                request.respondWithInt(numberOfServer);
+                                int n = this.coordinator.scale(request.readInt().get());
+                                request.respondWithInt(n);
                                 // In this case there is no need to scale of the number of servers
                             } else {
                                 request.respondWithInt(this.coordinator.getNumOfServers());
                             }
+                            break;
                         }
                     }
                     break;
