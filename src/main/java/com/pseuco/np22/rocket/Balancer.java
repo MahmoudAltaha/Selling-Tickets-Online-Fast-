@@ -70,7 +70,7 @@ public class Balancer implements RequestHandler {
                          */
                         int numberOfServer;
                         if (!request.readInt().isEmpty()) {
-                            numberOfServer = request.readInt().orElseThrow();
+                            numberOfServer = request.readInt().get();
                             this.coordinator.scale(numberOfServer);
                             request.respondWithInt(numberOfServer);
                             // In this case there is no need to scale of the number of servers
