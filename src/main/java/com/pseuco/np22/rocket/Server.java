@@ -234,8 +234,9 @@ public class Server implements Runnable {
             Thread.currentThread().interrupt();
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
             Thread.currentThread().interrupt();
+            e.printStackTrace();
+
         }
     }
 
