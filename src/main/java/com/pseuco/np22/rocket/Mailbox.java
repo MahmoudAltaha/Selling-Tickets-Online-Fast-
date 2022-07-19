@@ -99,15 +99,13 @@ public class Mailbox<M> {
                 IsMailboxFreeToAccess.await();
             }
             M message = null;
-            try {
-                if (HighMailBox.size() > 0) {
-                    message = HighMailBox.poll();
-                } else if (LowMailBox.size() > 0) {
-                    message = LowMailBox.poll();
-                }
-            } catch (Exception InterruptedException) {
-                return null;
+
+            if (HighMailBox.size() > 0) {
+                message = HighMailBox.poll();
+            } else if (LowMailBox.size() > 0) {
+                message = LowMailBox.poll();
             }
+
             return message;
         } finally {
             MailboxLock.unlock();
@@ -128,18 +126,15 @@ public class Mailbox<M> {
      */
     public M tryRecv() {
         MailboxLock.lock();
+
         try {
             M message = null;
-            try {
-                if (HighMailBox.size() > 0) {
-                    message = HighMailBox.poll();
-                } else if (LowMailBox.size() > 0) {
-                    message = LowMailBox.poll();
-                }
-                return message;
-            } catch (Exception InterruptedException) {
-                return null;
+            if (HighMailBox.size() > 0) {
+                message = HighMailBox.poll();
+            } else if (LowMailBox.size() > 0) {
+                message = LowMailBox.poll();
             }
+            return message;
         } finally {
             MailboxLock.unlock();
         }
