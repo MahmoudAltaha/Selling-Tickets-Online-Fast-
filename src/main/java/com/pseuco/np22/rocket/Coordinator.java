@@ -237,7 +237,7 @@ public class Coordinator {
             if (activeServers.isEmpty()) {
                 for (int i = 0; i < numServers; i++) {
                     createServer();
-                    System.out.println("creat server");
+                    System.out.println("creat server" + i);
                 }
                 /*
                  * if the number of wished servers are bigger than the current active servers we have then
@@ -247,7 +247,7 @@ public class Coordinator {
                 int numOfServersToCreate = numServers - activeServers.size();
                 for (int i = 0; i < numOfServersToCreate; i++) {
                     createServer();
-                    System.out.println("creat server 2");
+                    System.out.println("creat server " + i);
                 }
             }
             /*
@@ -259,7 +259,8 @@ public class Coordinator {
             else if (numServers < activeServers.size()) {
                 int numOfServersToRemove = numServers - activeServers.size();
                 for (int i = 0; i < numOfServersToRemove; i++) {
-                    removeServer(activeServersIDs.get(0));
+                    removeServer(activeServersIDs.remove(0));
+                    System.out.println("removed server " + i);
                 }
             }
             return numServers;
