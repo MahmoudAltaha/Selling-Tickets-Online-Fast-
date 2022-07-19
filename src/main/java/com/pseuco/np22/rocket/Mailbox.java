@@ -1,5 +1,6 @@
 package com.pseuco.np22.rocket;
 
+import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.locks.Condition;
@@ -12,8 +13,8 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class Mailbox<M> {
 
-    private Queue<M> LowMailBox;
-    private Queue<M> HighMailBox;
+    private Queue<M> LowMailBox = new LinkedList<>();
+    private Queue<M> HighMailBox = new LinkedList<>();;
     private ReentrantLock MailboxLock;
     private Condition IsMailboxFreeToAccess;
 
@@ -21,8 +22,6 @@ public class Mailbox<M> {
      * Constructs a new empty {@link Mailbox}.
      */
     public Mailbox() {
-        this.LowMailBox = new PriorityQueue<>();
-        this.HighMailBox = new PriorityQueue<>();
         this.MailboxLock = new ReentrantLock();
         this.IsMailboxFreeToAccess = MailboxLock.newCondition();
     }
@@ -51,7 +50,7 @@ public class Mailbox<M> {
     public boolean sendLowPriority(M message) {
         MailboxLock.lock();
         try {
-            boolean messageAdd = LowMailBox.offer(message);
+            boolean messageAdd = LowMailBox.add(message);
             IsMailboxFreeToAccess.signal();
             return messageAdd;
 
@@ -70,7 +69,7 @@ public class Mailbox<M> {
     public boolean sendHighPriority(M message) {
         MailboxLock.lock();
         try {
-            boolean messageAdd = HighMailBox.offer(message);
+            boolean messageAdd = HighMailBox.add(message);
             IsMailboxFreeToAccess.signal();
             return messageAdd;
 
