@@ -370,6 +370,8 @@ public class Server implements Runnable {
                     }
                     break;
                 }
+                default:
+                    break;
             }
         }
     }
