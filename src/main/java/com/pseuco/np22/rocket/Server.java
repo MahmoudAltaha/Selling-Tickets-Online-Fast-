@@ -225,7 +225,7 @@ public class Server implements Runnable {
             boolean keepHandlingMsg = true;
             // Get initial number of tickets from the data base
             List<Ticket> tikets = new ArrayList<>();
-            tikets = this.coordinator.getDatabase().allocate(10);
+            tikets = this.coordinator.getDatabase().allocate(5);
             if (!tikets.isEmpty()) {
                 int stodForLoop = tikets.size();
                 for (int i = 0; i < stodForLoop; i++) {
@@ -324,7 +324,7 @@ public class Server implements Runnable {
                     } else if (obj.getNumAllocatedTickets() == 0 && obj.isActive()) {
                         System.out.println(" i will check the db for you");
                         List<Ticket> tikets = new ArrayList<>();
-                        tikets = obj.coordinator.getDatabase().allocate(10);
+                        tikets = obj.coordinator.getDatabase().allocate(5);
                         // Check if I get Tickets from DB or not
                         if (!tikets.isEmpty()) {
                             // Yes I get, so save it localy

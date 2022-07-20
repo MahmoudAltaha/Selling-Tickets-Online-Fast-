@@ -36,7 +36,7 @@ public class Cli {
      * The amount of tickets initially available.
      */
     @Parameter(names = "-tickets")
-    private int tickets = 5;
+    private int tickets = 30;
 
     /**
      * The timeout after which reservations expire in seconds.
