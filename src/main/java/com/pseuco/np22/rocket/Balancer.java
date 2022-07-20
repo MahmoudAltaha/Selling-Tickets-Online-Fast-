@@ -212,24 +212,12 @@ public class Balancer implements RequestHandler {
 
             }
         } finally {
-            if (switchGetKindLock.isLocked()) {
-                switchGetKindLock.unlock();
-            }
-            if (switchGetMethodeLock.isLocked()) {
-                switchGetMethodeLock.unlock();
-            }
-            if (caseGetServerLock.isLocked()) {
-                caseGetServerLock.unlock();
-            }
-            if (defaultLock.isLocked()) {
-                defaultLock.unlock();
-            }
-            if (getLock.isLocked()) {
-                getLock.unlock();
-            }
-            if (postLock.isLocked()) {
-                postLock.unlock();
-            }
+            switchGetKindLock.unlock();
+            switchGetMethodeLock.unlock();
+            caseGetServerLock.unlock();
+            defaultLock.unlock();
+            postLock.unlock();
+            getLock.unlock();
         }
 
     }
