@@ -70,7 +70,7 @@ public class Estimator implements Runnable {
     @Override
     public void run() {
         /*
-         * TODO: Implement the estimator as described in the project description. The
+         * Implement the estimator as described in the project description. The
          * estimator will periodically send messages to the servers and process the
          * messages from its own mailbox.
          */

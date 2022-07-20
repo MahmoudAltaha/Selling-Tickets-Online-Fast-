@@ -17,7 +17,7 @@ public class Database {
     private final List<Ticket> unallocated = new ArrayList<>();
 
     private Lock ticketLock; // lock for safe access/leave to the tickets
-    private int numAvailable; // the number of tickets available
+    private int numAvailable = 0; // the number of tickets available
 
     /**
      * Constructs a new {@link Database}.

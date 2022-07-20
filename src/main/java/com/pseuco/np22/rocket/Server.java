@@ -249,6 +249,10 @@ public class Server implements Runnable {
             // the server was in Terminating state and he has finished handling existing requests so
             // he could now terminate
             System.out.println("I got shut down msg i will terminate ");
+            System.out.println("After Shut down, CHECKE if have ticket here  " + this.getAllocatedTickets().size()
+                    + "I am : " + Thread.currentThread().getName());
+            System.out.println(" Checke the Number in DB after deallocated  "
+                    + this.coordinator.getDatabase().getNumAvailable());
             this.terminateServer();
 
         } catch (InterruptedException e) {
@@ -335,7 +339,9 @@ public class Server implements Runnable {
                             // Tell the client that no tickets are available.
                             request.respondWithSoldOut();
                             System.out.println(" sorry no tickets ");
+                            break;
                         }
+
                         // Take a ticket from the stack of available tickets and reserve it.
                         final var ticket = obj.getAllocatedTickets().remove(0);
                         obj.reservations.put(customer, new Reservation(ticket));
@@ -439,8 +445,10 @@ public class Server implements Runnable {
         public void execute(Server obj) {
             // if the server have any Available (non reserved or sold ) ticket he should deallocate
             // them .
-
+            System.out.println("I am : " + Thread.currentThread().getName() + "I handle the Massage of Shut Down");
             if (!obj.getAllocatedTickets().isEmpty()) {
+                System.out.println("I have tickets to return. the number is bevor I send it to DB : "
+                        + obj.getAllocatedTickets().size());
                 obj.coordinator.getDatabase().deallocate(obj.getAllocatedTickets());
             }
             // put state of active to false so the termination steps are happining now

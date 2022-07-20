@@ -149,6 +149,7 @@ public class Balancer implements RequestHandler {
                         if (isServerStillActive || isServerInProcesOfTermination) {
                             // constructing MsgProcessRequest with request
                             Command<Server> message = new MsgProcessRequest(request);
+                            System.out.println("I BALANCER I send the Request " + request.getKind() + "  ");
                             var mailBoxOfassociatedServerKnown = this.coordinator
                                     .getServerMailbox(ID_associatedServerKnown);
                             mailBoxOfassociatedServerKnown.sendLowPriority(message);
@@ -169,6 +170,7 @@ public class Balancer implements RequestHandler {
                             request.setServerId(associatedServerID);
                             // constructing MsgProcessRequest with request
                             Command<Server> message = new MsgProcessRequest(request);
+                            System.out.println("I BALANCER I send the Request " + request.getKind() + "  ");
                             // get the mail box of this picked server
                             var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
                             // send this message with low priority
@@ -184,6 +186,7 @@ public class Balancer implements RequestHandler {
                         request.setServerId(associatedServerID);
                         // constructing MsgProcessRequest with request
                         Command<Server> message = new MsgProcessRequest(request);
+                        System.out.println("I BALANCER I send the Request " + request.getKind() + "  ");
                         // get the mail box of this picked server
                         var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
                         // send this message with low priority
