@@ -285,7 +285,7 @@ public class Server implements Runnable {
                 }
                 case RESERVE_TICKET: {
 
-                    var customer = request.getCustomerId();
+                    final var customer = request.getCustomerId();
                     if (obj.reservations.containsKey(customer)) {
                         // We do not allow a customer to reserve more than a ticket at a time.
 
@@ -294,7 +294,7 @@ public class Server implements Runnable {
                     } else if (obj.getNumAllocatedTickets() > 0 && obj.isActive()) {
 
                         // Take a ticket from the stack of available tickets and reserve it.
-                        var ticket = obj.getAllocatedTickets().remove(0);
+                        final var ticket = obj.getAllocatedTickets().remove(0);
                         obj.reservations.put(customer, new Reservation(ticket));
 
                         // Respond with the id of the reserved ticket.
@@ -327,19 +327,19 @@ public class Server implements Runnable {
 
                 }
                 case ABORT_PURCHASE: {
-                    var customer = request.getCustomerId();
+                    final var customer = request.getCustomerId();
                     if (!obj.reservations.containsKey(customer)) {
                         // Without a reservation there is nothing to abort.
                         request.respondWithError("No ticket has been reserved!");
                     } else {
-                        var reservation = obj.reservations.get(customer);
-                        var ticketId = request.readInt();
+                        final var reservation = obj.reservations.get(customer);
+                        final var ticketId = request.readInt();
                         if (ticketId.isEmpty()) {
                             // The client is supposed to provide a ticket id.
                             request.respondWithError("No ticket id provided!");
                         } else if (ticketId.get() == reservation.getTicketId()) {
                             // Abort the reservation and put the ticket back on the allocatedTickets.
-                            var ticket = reservation.abort();
+                            final var ticket = reservation.abort();
                             // I did abort, but I have to check if I return the abort ticket to DB or save it localy
                             if (obj.isInTermination()) {
                                 List<Ticket> Tickettolist = new ArrayList<Ticket>();
@@ -360,19 +360,19 @@ public class Server implements Runnable {
                     break;
                 }
                 case BUY_TICKET: {
-                    var customer = request.getCustomerId();
+                    final var customer = request.getCustomerId();
                     if (!obj.reservations.containsKey(customer)) {
                         // Without a reservation there is nothing to buy.
                         request.respondWithError("No ticket has been reserved!");
                     } else {
-                        var reservation = obj.reservations.get(customer);
-                        var ticketId = request.readInt();
+                        final var reservation = obj.reservations.get(customer);
+                        final var ticketId = request.readInt();
                         if (ticketId.isEmpty()) {
                             // The client is supposed to provide a ticket id.
                             request.respondWithError("No ticket id provided!");
                         } else if (ticketId.get() == reservation.getTicketId()) {
                             // Sell the ticket to the customer.
-                            var ticket = reservation.sell();
+                            final var ticket = reservation.sell();
                             obj.reservations.remove(customer);
                             // Respond with the id of the sold ticket.
                             request.respondWithInt(ticket.getId());
