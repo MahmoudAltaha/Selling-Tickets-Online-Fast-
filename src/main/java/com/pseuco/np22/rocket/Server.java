@@ -176,11 +176,17 @@ public class Server implements Runnable {
     /**
      * set the status of the Server to Terminated
      */
+    // TODO: add by Mohamad the line "removefromInTermination"
+    // I send all request from Balanacer to the server, except that is terminated
+    // so bevor get this thread interupted, I remove this server from "Intermination List"
+    // in the coordinator. In this case the balancer send the request to other active server.
+    //
     private void terminateServer() {
         serverStateLock.lock();
         try {
             this.state = ServerState.TERMINATED;
             this.coordinator.addToTerminatedServerIds(this.id);
+            this.coordinator.removefromInTermination(this.id);
         } finally {
             serverStateLock.unlock();
         }
@@ -218,6 +224,7 @@ public class Server implements Runnable {
                     this.allocatedTickets.add(tikets.remove(0));
                 }
             }
+            System.out.println("Ticket from DB when ther Server Start : " + this.allocatedTickets.size());
             // Start handling the request
             while (keepHandlingMsg) {
                 Command<Server> message = (Command<Server>) getMailbox().recv();
@@ -233,9 +240,11 @@ public class Server implements Runnable {
             // the server was in Terminating state and he has finished handling existing requests so
             // he could now terminate
             this.terminateServer();
+            Thread.interrupted();
 
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
+            Thread.interrupted();
             e.printStackTrace();
 
         }

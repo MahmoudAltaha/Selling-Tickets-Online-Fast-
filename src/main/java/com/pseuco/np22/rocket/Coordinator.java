@@ -300,6 +300,38 @@ public class Coordinator {
     }
 
     /**
+     * Returns a list of {@link ServerId} servers that the in proces of termination.
+     * 
+     * @return A list of {@link ServerId} servers that the in proces of termination
+     */
+    public List<ServerId> getinTerminationServersIDs() {
+        this.coordinatorLock.lock();
+        try {
+            return inTerminationServersIDs;
+        } finally {
+            this.coordinatorLock.unlock();
+        }
+    }
+
+    /**
+     * TODO : add by Mohamad
+     * remove the server from the list of inTerminationServersIDs
+     * In this way, when the Balancer check if this List have a associated Server,
+     * then send the request to this server, other ways send the request to other active
+     * Server
+     * 
+     * @param id
+     */
+    public void removefromInTermination(ServerId id) {
+        this.coordinatorLock.lock();
+        try {
+            this.inTerminationServersIDs.remove(id);
+        } finally {
+            this.coordinatorLock.unlock();
+        }
+    }
+
+    /**
      * <p>
      * Returns a list of {@link ServerId} of all servers.
      * </p>

@@ -139,44 +139,47 @@ public class Balancer implements RequestHandler {
                     if (!request.getServerId().isEmpty()) {
                         // check if this server is now aktive or terminated
                         ServerId ID_associatedServerKnown = request.getServerId().get();
-                        // TODO : to cheke if there is server active shoulld be in server class, and rspond to the
-                        // client withh error and send the request to other active server (scaling 2.2.6 in 4/9
-                        // "b")
+
+                        // TODO: Add by Mohamad, you to see editors in calsses Server and coordinator, I gave makr
+                        // with "TODO"
                         boolean isServerStillActive = this.coordinator.getActiveServerIds()
                                 .contains(ID_associatedServerKnown);
-                        if (isServerStillActive) {
+                        boolean isServerInProcesOfTermination = this.coordinator.getinTerminationServersIDs()
+                                .contains(ID_associatedServerKnown);
+                        if (isServerStillActive || isServerInProcesOfTermination) {
                             // constructing MsgProcessRequest with request
                             Command<Server> message = new MsgProcessRequest(request);
                             var mailBoxOfassociatedServerKnown = this.coordinator
                                     .getServerMailbox(ID_associatedServerKnown);
                             mailBoxOfassociatedServerKnown.sendLowPriority(message);
-                        } else {
-
-                            if (!request.getKind().equals(Kind.RESERVE_TICKET)
-                                    && (!this.coordinator.getTerminatedServerIds()
-                                            .contains(ID_associatedServerKnown))) {
-                                // constructing MsgProcessRequest with request
-                                Command<Server> message = new MsgProcessRequest(request);
-                                var mailBoxOfassociatedServerKnown = this.coordinator
-                                        .getServerMailbox(ID_associatedServerKnown);
-                                mailBoxOfassociatedServerKnown.sendLowPriority(message);
-                            } else {
-                                // get random server from the list of active servers
-                                ServerId associatedServerID = this.coordinator.pickRandomServer();
-                                // correlate a customar with specific server
-                                request.setServerId(associatedServerID);
-                                // constructing MsgProcessRequest with request
-                                Command<Server> message = new MsgProcessRequest(request);
-                                // get the mail box of this picked server
-                                var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
-                                // send this message with low priority
-                                mailBoxOfPickedServer.sendLowPriority(message);
-                            }
-
                         }
+                        // else {
+
+                        // if (!request.getKind().equals(Kind.RESERVE_TICKET)
+                        // && (!this.coordinator.getTerminatedServerIds()
+                        // .contains(ID_associatedServerKnown))) {
+                        // // constructing MsgProcessRequest with request
+                        // Command<Server> message = new MsgProcessRequest(request);
+                        // var mailBoxOfassociatedServerKnown = this.coordinator
+                        // .getServerMailbox(ID_associatedServerKnown);
+                        // mailBoxOfassociatedServerKnown.sendLowPriority(message);
+                        // }
+                        // else {
+                        // // get random server from the list of active servers
+                        // ServerId associatedServerID = this.coordinator.pickRandomServer();
+                        // // correlate a customar with specific server
+                        // request.setServerId(associatedServerID);
+                        // // constructing MsgProcessRequest with request
+                        // Command<Server> message = new MsgProcessRequest(request);
+                        // // get the mail box of this picked server
+                        // var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
+                        // // send this message with low priority
+                        // mailBoxOfPickedServer.sendLowPriority(message);
+                        // }
+
+                        // }
                         // if the rquest of client is new or the previous server is terminated, so then obtain a
                         // random active server to handle this request
-                        // (((wrote by mahmoud)))TODO : ask mohamad about the sequence of if else later and
                         // generally about isPresent etc.
                     } else {
                         // get random server from the list of active servers
