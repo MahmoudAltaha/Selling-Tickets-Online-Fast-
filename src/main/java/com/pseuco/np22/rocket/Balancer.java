@@ -5,6 +5,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.pseuco.np22.request.Request;
 import com.pseuco.np22.request.RequestHandler;
 import com.pseuco.np22.request.ServerId;
+import com.pseuco.np22.request.Request.Kind;
 import com.pseuco.np22.rocket.Server.MsgProcessRequest;
 
 /**
@@ -150,16 +151,24 @@ public class Balancer implements RequestHandler {
                                     .getServerMailbox(ID_associatedServerKnown);
                             mailBoxOfassociatedServerKnown.sendLowPriority(message);
                         } else {
-                            // get random server from the list of active servers
-                            ServerId associatedServerID = this.coordinator.pickRandomServer();
-                            // correlate a customar with specific server
-                            request.setServerId(associatedServerID);
-                            // constructing MsgProcessRequest with request
-                            Command<Server> message = new MsgProcessRequest(request);
-                            // get the mail box of this picked server
-                            var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
-                            // send this message with low priority
-                            mailBoxOfPickedServer.sendLowPriority(message);
+                            if (request.getKind().equals(Kind.NUM_AVAILABLE_TICKETS)) {
+                                // constructing MsgProcessRequest with request
+                                Command<Server> message = new MsgProcessRequest(request);
+                                var mailBoxOfassociatedServerKnown = this.coordinator
+                                        .getServerMailbox(ID_associatedServerKnown);
+                                mailBoxOfassociatedServerKnown.sendLowPriority(message);
+                            } else {
+                                // get random server from the list of active servers
+                                ServerId associatedServerID = this.coordinator.pickRandomServer();
+                                // correlate a customar with specific server
+                                request.setServerId(associatedServerID);
+                                // constructing MsgProcessRequest with request
+                                Command<Server> message = new MsgProcessRequest(request);
+                                // get the mail box of this picked server
+                                var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
+                                // send this message with low priority
+                                mailBoxOfPickedServer.sendLowPriority(message);
+                            }
 
                         }
                         // if the rquest of client is new or the previous server is terminated, so then obtain a
