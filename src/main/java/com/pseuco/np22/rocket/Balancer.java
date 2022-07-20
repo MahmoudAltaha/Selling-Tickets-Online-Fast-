@@ -151,6 +151,7 @@ public class Balancer implements RequestHandler {
                                     .getServerMailbox(ID_associatedServerKnown);
                             mailBoxOfassociatedServerKnown.sendLowPriority(message);
                         } else {
+
                             if (!request.getKind().equals(Kind.RESERVE_TICKET)
                                     && (!this.coordinator.getTerminatedServerIds()
                                             .contains(ID_associatedServerKnown))) {

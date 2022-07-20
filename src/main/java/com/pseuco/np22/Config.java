@@ -27,7 +27,7 @@ public class Config {
         this.numTickets = numTickets;
         this.timeout = timeout;
         // We just set this to two for now.
-        this.initialServers = 1;
+        this.initialServers = 2;
     }
 
     /**

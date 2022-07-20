@@ -240,10 +240,9 @@ public class Server implements Runnable {
             // he could now terminate
             this.terminateServer();
             System.out.println("bevor terminated" + getNumAllocatedTickets());
-            Thread.currentThread().interrupt();
+
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
-            Thread.currentThread().interrupt();
             e.printStackTrace();
 
         }
@@ -290,7 +289,9 @@ public class Server implements Runnable {
                     var customer = request.getCustomerId();
                     if (obj.reservations.containsKey(customer)) {
                         // We do not allow a customer to reserve more than a ticket at a time.
+                        System.out.println("A ticket has already been reserved!");
                         request.respondWithError("A ticket has already been reserved!");
+
                     } else if (obj.getNumAllocatedTickets() > 0 && obj.isActive()) {
                         // Take a ticket from the stack of available tickets and reserve it.
                         var ticket = obj.getAllocatedTickets().remove(0);
@@ -319,6 +320,7 @@ public class Server implements Runnable {
                         ServerId newServerIdToHandleThisRequest = obj.coordinator.pickRandomServer();
                         request.setServerId(newServerIdToHandleThisRequest);
                         request.respondWithError("this server is down");
+                        System.out.println("this server is down");
                     }
                     break;
 
