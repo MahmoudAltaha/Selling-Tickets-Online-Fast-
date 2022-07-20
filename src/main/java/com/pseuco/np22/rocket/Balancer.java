@@ -190,9 +190,13 @@ public class Balancer implements RequestHandler {
                         // send this message with low priority
                         mailBoxOfPickedServer.sendLowPriority(message);
                     }
+                    break;
             }
+
         } finally {
             balancerLock.unlock();
         }
+
     }
+
 }
