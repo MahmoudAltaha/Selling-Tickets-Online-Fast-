@@ -31,12 +31,7 @@ public class Balancer implements RequestHandler {
      */
     private final Coordinator coordinator;
 
-    private ReentrantLock switchGetKindLock = new ReentrantLock();
-    private ReentrantLock switchGetMethodeLock = new ReentrantLock();
-    private ReentrantLock caseGetServerLock = new ReentrantLock();
-    private ReentrantLock defaultLock = new ReentrantLock();
-    private ReentrantLock getLock = new ReentrantLock();
-    private ReentrantLock postLock = new ReentrantLock();
+    private ReentrantLock balancerLock = new ReentrantLock();
 
     /**
      * Constructs a new {@link Balancer}.
@@ -51,7 +46,7 @@ public class Balancer implements RequestHandler {
 
     @Override
     public void handle(Request request) {
-        switchGetKindLock.lock();
+        balancerLock.lock();
         try {
             /*
              * Implementation of the load balancer.
@@ -63,16 +58,9 @@ public class Balancer implements RequestHandler {
              * For the `NUM_SERVERS` request you have to handle both `GET` and `POST` requests.
              */
             switch (request.getKind()) {
-
                 case NUM_SERVERS: {
-                    switchGetKindLock.unlock();
-
-                    switchGetMethodeLock.lock();
                     switch (request.getMethod()) {
-
                         case GET: {
-                            switchGetMethodeLock.unlock();
-                            getLock.lock();
                             /*
                              * Query the coordinator for the number of active
                              * (non-terminating) servers and send the number back to
@@ -80,13 +68,9 @@ public class Balancer implements RequestHandler {
                              */
                             int numberofActiveServers = this.coordinator.getNumOfServers();
                             request.respondWithInt(numberofActiveServers);
-                            getLock.unlock();
                             break;
                         }
                         case POST: {
-                            switchGetMethodeLock.unlock();
-
-                            postLock.lock();
                             /*
                              * Obtain the new number of servers from the request using
                              * `readInt`, scale to the given number of servers, and finally
@@ -108,16 +92,12 @@ public class Balancer implements RequestHandler {
                             } else {
                                 request.respondWithInt(this.coordinator.getNumOfServers());
                             }
-                            postLock.unlock();
                             break;
                         }
                     }
                     break;
                 }
                 case GET_SERVERS: {
-                    switchGetKindLock.unlock();
-                    caseGetServerLock.lock();
-
                     /**
                      * Query the coordinator for the active (non-terminating) servers
                      * and send the ids of these servers to the client.
@@ -127,8 +107,6 @@ public class Balancer implements RequestHandler {
                     Iterable<ServerId> ids;
                     ids = this.coordinator.getActiveServerIds();
                     request.respondWithServerIds(ids);
-
-                    caseGetServerLock.unlock();
                     break;
                 }
 
@@ -142,9 +120,6 @@ public class Balancer implements RequestHandler {
                 }
 
                 default:
-                    switchGetKindLock.unlock();
-                    defaultLock.lock();
-
                     /**
                      * The remaining requests must be handed over to a server.
                      * 
@@ -178,7 +153,17 @@ public class Balancer implements RequestHandler {
                             var mailBoxOfassociatedServerKnown = this.coordinator
                                     .getServerMailbox(ID_associatedServerKnown);
                             mailBoxOfassociatedServerKnown.sendLowPriority(message);
-                        } else {
+                        }
+                        // if (!request.getKind().equals(Kind.RESERVE_TICKET)
+                        // && (!this.coordinator.getTerminatedServerIds()
+                        // .contains(ID_associatedServerKnown))) {
+                        // // constructing MsgProcessRequest with request
+                        // Command<Server> message = new MsgProcessRequest(request);
+                        // var mailBoxOfassociatedServerKnown = this.coordinator
+                        // .getServerMailbox(ID_associatedServerKnown);
+                        // mailBoxOfassociatedServerKnown.sendLowPriority(message);
+                        // }
+                        else {
                             // get random server from the list of active servers
                             ServerId associatedServerID = this.coordinator.pickRandomServer();
                             // correlate a customar with specific server
@@ -207,17 +192,11 @@ public class Balancer implements RequestHandler {
                         // send this message with low priority
                         mailBoxOfPickedServer.sendLowPriority(message);
                     }
-                    defaultLock.unlock();
                     break;
-
             }
+
         } finally {
-            switchGetKindLock.unlock();
-            switchGetMethodeLock.unlock();
-            caseGetServerLock.unlock();
-            defaultLock.unlock();
-            postLock.unlock();
-            getLock.unlock();
+            balancerLock.unlock();
         }
 
     }
