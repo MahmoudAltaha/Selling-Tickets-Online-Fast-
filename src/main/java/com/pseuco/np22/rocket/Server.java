@@ -308,13 +308,22 @@ public class Server implements Runnable {
                             // Yes I get, so save it localy
                             int stodForLoop = tikets.size();
                             for (int i = 0; i < stodForLoop; i++) {
-                                obj.allocatedTickets.add(tikets.remove(0));
+                                obj.getAllocatedTickets().add(tikets.remove(0));
+                                System.out.println("size of list i get from data base : " + tikets.size());
+                                System.out.println("number of tickets the server has  : "
+                                        + obj.getAllocatedTickets().size());
                             }
                             // No I did not get tickets
                         } else {
                             // Tell the client that no tickets are available.
                             request.respondWithSoldOut();
                         }
+                        // Take a ticket from the stack of available tickets and reserve it.
+                        final var ticket = obj.getAllocatedTickets().remove(0);
+                        obj.reservations.put(customer, new Reservation(ticket));
+
+                        // Respond with the id of the reserved ticket.
+                        request.respondWithInt(ticket.getId());
                         // In this case I am checking if I am in proces of termination
                     } else if (obj.isInTermination()) {
                         // Yes I am in proces of termination, so I have send the requesst to other active server
