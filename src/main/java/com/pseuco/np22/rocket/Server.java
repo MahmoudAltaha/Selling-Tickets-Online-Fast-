@@ -103,6 +103,13 @@ public class Server implements Runnable {
     }
 
     /**
+     * set ticket estimation
+     */
+    private int getCurrentTicketEstimation() {
+        return this.currentTicketEstimation;
+    }
+
+    /**
      * Methode returns the number of allocated tickets "non reserved or sold"
      */
     private int getNumAllocatedTickets() {
@@ -200,6 +207,7 @@ public class Server implements Runnable {
             if (reservation.getAge() > this.coordinator.getConfig().getTimeout()) {
                 // Make the ticket available again.
                 this.allocatedTickets.add(reservation.abort());
+                System.out.println("reservation time out : " + reservation.getTicketId() + "aborted");
                 return true;
             } else {
                 return false;
@@ -227,6 +235,7 @@ public class Server implements Runnable {
             System.out.println("Ticket from DB when ther Server Start : " + this.allocatedTickets.size());
             // Start handling the request
             while (keepHandlingMsg) {
+
                 Command<Server> message = (Command<Server>) getMailbox().recv();
                 assert (message != null);
                 // make sure that the mailbox did not returns a null msg to avoid calling execute on null
@@ -239,13 +248,13 @@ public class Server implements Runnable {
             }
             // the server was in Terminating state and he has finished handling existing requests so
             // he could now terminate
+            System.out.println("I got shut down msg i will terminate ");
             this.terminateServer();
-            Thread.interrupted();
 
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
-            Thread.interrupted();
             e.printStackTrace();
+            System.out.println("That is it ,, ciaoooooooo ");
 
         }
     }
@@ -274,33 +283,42 @@ public class Server implements Runnable {
              * 📌 Hint: Use the 🐌 implementation as a basis.
              */
             // note: this implementaion is very identical with the 🐌 implementation
+            System.out.println("i will handle request : " + Thread.currentThread().getName());
             obj.clearReservations();
             switch (request.getKind()) {
                 case NUM_AVAILABLE_TICKETS: {
                     // respond with an approximation of the actual number.
-                    int currentTicketEstimation = obj.currentTicketEstimation + obj.getNumAllocatedTickets();
+                    int currentTicketEstimation = obj.getCurrentTicketEstimation() + obj.getNumAllocatedTickets();
                     request.respondWithInt(currentTicketEstimation);
+                    System.out.println(" request (numOfTicket) ,number of estimation : "
+                            + obj.getCurrentTicketEstimation());
+                    System.out.println(" request (numOfTicket) ,number of allovated : " + obj.getNumAllocatedTickets());
+                    System.out.println(" request (numOfTicket) ,alltogether here you go : " + currentTicketEstimation);
 
                     break;
                 }
                 case RESERVE_TICKET: {
-
+                    System.out.println("costumer want to reserve ticket , lets see if this valid");
                     final var customer = request.getCustomerId();
                     if (obj.reservations.containsKey(customer)) {
                         // We do not allow a customer to reserve more than a ticket at a time.
-
                         request.respondWithError("A ticket has already been reserved!");
+                        System.out.println("A ticket has already been reserved!");
 
                     } else if (obj.getNumAllocatedTickets() > 0 && obj.isActive()) {
-
+                        System.out.println("Ok, you can reserve(i am active and have some allocated tickets)");
                         // Take a ticket from the stack of available tickets and reserve it.
+                        System.out.println("num of alloc. before reservation : " + obj.getNumAllocatedTickets());
                         final var ticket = obj.getAllocatedTickets().remove(0);
                         obj.reservations.put(customer, new Reservation(ticket));
+                        System.out.println("num of alloc. after reservation : " + obj.getNumAllocatedTickets());
 
                         // Respond with the id of the reserved ticket.
                         request.respondWithInt(ticket.getId());
+                        System.out.println(" this ticket is reserved now : " + ticket.getId());
                         // there is no tickets localy but I am Activ, so I have to get tickets from DB
                     } else if (obj.getNumAllocatedTickets() == 0 && obj.isActive()) {
+                        System.out.println(" i will check the db for you");
                         List<Ticket> tikets = new ArrayList<>();
                         tikets = obj.coordinator.getDatabase().allocate(10);
                         // Check if I get Tickets from DB or not
@@ -309,14 +327,14 @@ public class Server implements Runnable {
                             int stodForLoop = tikets.size();
                             for (int i = 0; i < stodForLoop; i++) {
                                 obj.getAllocatedTickets().add(tikets.remove(0));
-                                System.out.println("size of list i get from data base : " + tikets.size());
-                                System.out.println("number of tickets the server has  : "
-                                        + obj.getAllocatedTickets().size());
                             }
+                            System.out.println(" i got " + tikets.size() + "from db now ia have "
+                                    + obj.getNumAllocatedTickets() + "tickets");
                             // No I did not get tickets
                         } else {
                             // Tell the client that no tickets are available.
                             request.respondWithSoldOut();
+                            System.out.println(" sorry no tickets ");
                         }
                         // Take a ticket from the stack of available tickets and reserve it.
                         final var ticket = obj.getAllocatedTickets().remove(0);
@@ -324,13 +342,16 @@ public class Server implements Runnable {
 
                         // Respond with the id of the reserved ticket.
                         request.respondWithInt(ticket.getId());
+                        System.out.println(" ticket with id : " + ticket.getId() + " is reserved");
+                        System.out.println(" now i have " + obj.getNumAllocatedTickets() + " left :)");
                         // In this case I am checking if I am in proces of termination
                     } else if (obj.isInTermination()) {
+                        System.out.println("sorry mate i am terminating");
                         // Yes I am in proces of termination, so I have send the requesst to other active server
                         ServerId newServerIdToHandleThisRequest = obj.coordinator.pickRandomServer();
                         request.setServerId(newServerIdToHandleThisRequest);
                         request.respondWithError("this server is down");
-                        System.out.println("this server is down");
+                        System.out.println(" check the other server : " + newServerIdToHandleThisRequest);
                     }
                     break;
 
@@ -340,25 +361,33 @@ public class Server implements Runnable {
                     if (!obj.reservations.containsKey(customer)) {
                         // Without a reservation there is nothing to abort.
                         request.respondWithError("No ticket has been reserved!");
+                        System.out.println("No ticket has been reserved!");
                     } else {
                         final var reservation = obj.reservations.get(customer);
                         final var ticketId = request.readInt();
                         if (ticketId.isEmpty()) {
                             // The client is supposed to provide a ticket id.
                             request.respondWithError("No ticket id provided!");
+                            System.out.println("No ticket id provided!");
                         } else if (ticketId.get() == reservation.getTicketId()) {
                             // Abort the reservation and put the ticket back on the allocatedTickets.
                             final var ticket = reservation.abort();
+                            System.out.println(" step 1 : reservation aborted ");
                             // I did abort, but I have to check if I return the abort ticket to DB or save it localy
                             if (obj.isInTermination()) {
+                                System.out.println(" step 2 : return immediatly to db  ");
                                 List<Ticket> Tickettolist = new ArrayList<Ticket>();
                                 Tickettolist.add(ticket);
                                 obj.coordinator.getDatabase().deallocate(Tickettolist);
 
                             } else {
+                                System.out.println(" step 2 : numofAlloc before :  " + obj.getNumAllocatedTickets());
                                 obj.allocatedTickets.add(ticket);
+                                System.out.println(" step 2 : add to allocated  ");
+                                System.out.println(" step 2 : numofAlloc after :  " + obj.getNumAllocatedTickets());
                             }
                             obj.reservations.remove(customer);
+                            System.out.println(" step 3 : remove from reservation ");
                             // Respond with the id of the formerly reserved ticket.
                             request.respondWithInt(ticket.getId());
                         } else {
@@ -369,6 +398,7 @@ public class Server implements Runnable {
                     break;
                 }
                 case BUY_TICKET: {
+                    System.out.println("start selling");
                     final var customer = request.getCustomerId();
                     if (!obj.reservations.containsKey(customer)) {
                         // Without a reservation there is nothing to buy.
@@ -382,7 +412,9 @@ public class Server implements Runnable {
                         } else if (ticketId.get() == reservation.getTicketId()) {
                             // Sell the ticket to the customer.
                             final var ticket = reservation.sell();
+                            System.out.println("num of reservation befor seeling : " + obj.reservations.size());
                             obj.reservations.remove(customer);
+                            System.out.println("num of reservation befor seeling : " + obj.reservations.size());
                             // Respond with the id of the sold ticket.
                             request.respondWithInt(ticket.getId());
 

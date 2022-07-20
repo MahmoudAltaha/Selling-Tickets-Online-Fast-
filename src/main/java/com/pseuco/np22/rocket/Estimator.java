@@ -92,7 +92,6 @@ public class Estimator implements Runnable {
             }
             // now get the num of tickets in DB
             int numberofTicketsInDB = this.coordinator.getDatabase().getNumAvailable();
-            this.addToCurrentTicketsEstimation(numberofTicketsInDB);
             // read the msgs to estimate from each server that is still not terminated....in first
             // round it is empty.
             while (!this.getMailbox().isEmpty()) {
@@ -102,15 +101,16 @@ public class Estimator implements Runnable {
             }
             // send all servers the estimation number (except the number of ticket the server we send
             // to has itself)
-            int numberOfTicketInServers = 0;
 
             for (ServerId serverId : nonTerminatedServersIds) {
-                for (ServerId id : serverEstimations.keySet()) {
-                    if (!id.equals(serverId)) {
-                        numberOfTicketInServers = numberOfTicketInServers + serverEstimations.get(id);
+                int numberOfTicketInServers = 0;
+                if (!serverEstimations.isEmpty()) {
+                    for (ServerId id : serverEstimations.keySet()) {
+                        if (!id.equals(serverId)) {
+                            numberOfTicketInServers = numberOfTicketInServers + serverEstimations.get(id);
+                        }
                     }
                 }
-
                 // create the msg to send
                 int endEstimation = numberOfTicketInServers + numberofTicketsInDB;
                 Command<Server> msgTicketsAvailable = new MsgTicketsAvailable(endEstimation);
