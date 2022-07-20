@@ -232,7 +232,7 @@ public class Server implements Runnable {
                 if (message != null) {
                     message.execute(this);
                 }
-                if (!isActive() && this.reservations.isEmpty()) {
+                if (!isActive() && this.reservations.isEmpty() && this.getMailbox().isEmpty()) {
                     keepHandlingMsg = false;
                 }
             }
