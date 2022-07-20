@@ -55,6 +55,8 @@ public class Coordinator {
      * a List that contains the ID of all In-termination servers.
      */
     private List<ServerId> inTerminationServersIDs = new ArrayList<ServerId>();
+
+    private List<ServerId> terminatedServerIDs = new ArrayList<ServerId>();
     /**
      * a List that contains the ID of all servers we have.
      */
@@ -313,6 +315,24 @@ public class Coordinator {
         this.coordinatorLock.lock();
         try {
             return allServersIDs;
+        } finally {
+            this.coordinatorLock.unlock();
+        }
+    }
+
+    public List<ServerId> getTerminatedServerIds() {
+        this.coordinatorLock.lock();
+        try {
+            return terminatedServerIDs;
+        } finally {
+            this.coordinatorLock.unlock();
+        }
+    }
+
+    public void addToTerminatedServerIds(ServerId id) {
+        this.coordinatorLock.lock();
+        try {
+            terminatedServerIDs.add(id);
         } finally {
             this.coordinatorLock.unlock();
         }

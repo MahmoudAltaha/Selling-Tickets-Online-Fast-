@@ -151,7 +151,9 @@ public class Balancer implements RequestHandler {
                                     .getServerMailbox(ID_associatedServerKnown);
                             mailBoxOfassociatedServerKnown.sendLowPriority(message);
                         } else {
-                            if (!request.getKind().equals(Kind.RESERVE_TICKET)) {
+                            if (!request.getKind().equals(Kind.RESERVE_TICKET)
+                                    && (!this.coordinator.getTerminatedServerIds()
+                                            .contains(ID_associatedServerKnown))) {
                                 // constructing MsgProcessRequest with request
                                 Command<Server> message = new MsgProcessRequest(request);
                                 var mailBoxOfassociatedServerKnown = this.coordinator

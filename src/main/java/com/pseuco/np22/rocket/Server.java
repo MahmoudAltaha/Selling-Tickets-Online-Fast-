@@ -181,6 +181,7 @@ public class Server implements Runnable {
         serverStateLock.lock();
         try {
             this.state = ServerState.TERMINATED;
+            this.coordinator.addToTerminatedServerIds(this.id);
         } finally {
             serverStateLock.unlock();
         }
