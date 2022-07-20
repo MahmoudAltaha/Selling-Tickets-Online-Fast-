@@ -30,18 +30,25 @@ public class Server implements Runnable {
      */
     private final Mailbox<Command<Server>> mailbox = new Mailbox<>();
 
-    /*
-     * Useful for the execute of requests from balancer , if the coordinator has sent a shut
-     * down msg to the server then
-     * the server itself would change his active status to "INTERMIATION" in the execute
-     * methode of
-     * msgShutdown. In this case the server must not accept
-     * new request for new reservations. Therfore, he checks his state in the
-     * msgprocessrequest
-     * and acting according to his state.
+    /**
+     * Server state locks
      */
-    private ServerState state = ServerState.ACTIVE;
+    private ReentrantLock serverStateLock = new ReentrantLock();
 
+    /**
+     * Reservations made by customers.
+     */
+    private Map<CustomerId, Reservation> reservations = new HashMap<>();
+
+    /**
+     * List of allocated tickets from DB.
+     * Server/Or DB have no tickets left.
+     */
+    private List<Ticket> allocatedTickets = new ArrayList<>();
+
+    /*
+     * Define Server states
+     */
     public static enum ServerState {
         /**
          * The server is active and can process all kind of requests.
@@ -57,18 +64,10 @@ public class Server implements Runnable {
         TERMINATED;
     }
 
-    private ReentrantLock serverStateLock = new ReentrantLock();
-
-    /**
-     * Reservations made by customers.
+    /*
+     * Start the Serve with active state
      */
-    private Map<CustomerId, Reservation> reservations = new HashMap<>();
-
-    /**
-     * List of allocated tickets from DB. //TODO think about allocateing tickets in case
-     * Server/Or DB have no tickets left.
-     */
-    private List<Ticket> allocatedTickets = new ArrayList<>();
+    private ServerState state = ServerState.ACTIVE;
 
     /**
      * Current ticket estimation from estimator
@@ -119,9 +118,9 @@ public class Server implements Runnable {
     }
 
     /**
-     * Return the status of the server (active or not)
+     * Return true if the status of the server "Activ"
      * 
-     * @return The {@link active}
+     * @return The {@link Active}
      */
     public boolean isActive() {
         serverStateLock.lock();
@@ -130,12 +129,12 @@ public class Server implements Runnable {
         } finally {
             serverStateLock.unlock();
         }
-
     }
 
     /**
+     * Return true if the status of the server "Terminated"
      * 
-     * @return
+     * @return The {@link Terminated}
      */
     public boolean isTerminated() {
         serverStateLock.lock();
@@ -148,8 +147,9 @@ public class Server implements Runnable {
     }
 
     /**
+     * Return true if the status of the server "in Proces of Termaination"
      * 
-     * @return
+     * @return The {@link isInTermination}
      */
     public boolean isInTermination() {
         serverStateLock.lock();
@@ -162,7 +162,7 @@ public class Server implements Runnable {
     }
 
     /**
-     * set the status of the Server to non active
+     * set the status of the Server to In proces of Termaination
      */
     private void deactivateServer() {
         serverStateLock.lock();
@@ -171,11 +171,10 @@ public class Server implements Runnable {
         } finally {
             serverStateLock.unlock();
         }
-
     }
 
     /**
-     * 
+     * set the status of the Server to Terminated
      */
     private void terminateServer() {
         serverStateLock.lock();
@@ -206,25 +205,20 @@ public class Server implements Runnable {
     @Override
     public void run() {
         /*
-         * TODO: Implement the server as described in the project description. The
-         * server will process the messages sent to its mailbox.
+         * The server will process the messages sent to its mailbox.
          */
-
         try {
             boolean keepHandlingMsg = true;
+            // Get initial number of tickets from the data base
             List<Ticket> tikets = new ArrayList<>();
             tikets = this.coordinator.getDatabase().allocate(10);
-            System.out.println("Size of returend List from Server is : " + tikets.size());
             if (!tikets.isEmpty()) {
-                System.out.println("Size of returend List from Server is agaaaaain : " + tikets.size());
                 int stodForLoop = tikets.size();
-                System.out.println("Size of returend List from Server is agaaaaain : " + tikets.size());
                 for (int i = 0; i < stodForLoop; i++) {
                     this.allocatedTickets.add(tikets.remove(0));
-                    System.out.print("Hiere is ticket to add" + i);
                 }
             }
-
+            // Start handling the request
             while (keepHandlingMsg) {
                 Command<Server> message = (Command<Server>) getMailbox().recv();
                 assert (message != null);
@@ -239,7 +233,6 @@ public class Server implements Runnable {
             // the server was in Terminating state and he has finished handling existing requests so
             // he could now terminate
             this.terminateServer();
-            System.out.println("bevor terminated" + getNumAllocatedTickets());
 
         } catch (InterruptedException e) {
             // TODO Auto-generated catch block
@@ -271,12 +264,9 @@ public class Server implements Runnable {
             /*
              * 📌 Hint: Use the 🐌 implementation as a basis.
              */
-
             // note: this implementaion is very identical with the 🐌 implementation
-
             obj.clearReservations();
             switch (request.getKind()) {
-
                 case NUM_AVAILABLE_TICKETS: {
                     // respond with an approximation of the actual number.
                     int currentTicketEstimation = obj.currentTicketEstimation + obj.getNumAllocatedTickets();
@@ -289,34 +279,36 @@ public class Server implements Runnable {
                     var customer = request.getCustomerId();
                     if (obj.reservations.containsKey(customer)) {
                         // We do not allow a customer to reserve more than a ticket at a time.
-                        System.out.println("A ticket has already been reserved!");
+
                         request.respondWithError("A ticket has already been reserved!");
 
                     } else if (obj.getNumAllocatedTickets() > 0 && obj.isActive()) {
+
                         // Take a ticket from the stack of available tickets and reserve it.
                         var ticket = obj.getAllocatedTickets().remove(0);
                         obj.reservations.put(customer, new Reservation(ticket));
+
                         // Respond with the id of the reserved ticket.
                         request.respondWithInt(ticket.getId());
-
+                        // there is no tickets localy but I am Activ, so I have to get tickets from DB
                     } else if (obj.getNumAllocatedTickets() == 0 && obj.isActive()) {
                         List<Ticket> tikets = new ArrayList<>();
                         tikets = obj.coordinator.getDatabase().allocate(10);
-
+                        // Check if I get Tickets from DB or not
                         if (!tikets.isEmpty()) {
-
+                            // Yes I get, so save it localy
                             int stodForLoop = tikets.size();
-
                             for (int i = 0; i < stodForLoop; i++) {
                                 obj.allocatedTickets.add(tikets.remove(0));
-
                             }
+                            // No I did not get tickets
                         } else {
                             // Tell the client that no tickets are available.
                             request.respondWithSoldOut();
                         }
-
+                        // In this case I am checking if I am in proces of termination
                     } else if (obj.isInTermination()) {
+                        // Yes I am in proces of termination, so I have send the requesst to other active server
                         ServerId newServerIdToHandleThisRequest = obj.coordinator.pickRandomServer();
                         request.setServerId(newServerIdToHandleThisRequest);
                         request.respondWithError("this server is down");
@@ -324,8 +316,7 @@ public class Server implements Runnable {
                     }
                     break;
 
-                } // TODO :we have to get the abort ticket back to data base direct, only if ther server
-                  // nonactive state
+                }
                 case ABORT_PURCHASE: {
                     var customer = request.getCustomerId();
                     if (!obj.reservations.containsKey(customer)) {
@@ -340,6 +331,7 @@ public class Server implements Runnable {
                         } else if (ticketId.get() == reservation.getTicketId()) {
                             // Abort the reservation and put the ticket back on the allocatedTickets.
                             var ticket = reservation.abort();
+                            // I did abort, but I have to check if I return the abort ticket to DB or save it localy
                             if (obj.isInTermination()) {
                                 List<Ticket> Tickettolist = new ArrayList<Ticket>();
                                 Tickettolist.add(ticket);
@@ -432,7 +424,7 @@ public class Server implements Runnable {
         @Override
         public void execute(Server obj) {
             /**
-             * TODO: Update the number of available tickets and respond to the estimator
+             * Update the number of available tickets and respond to the estimator
              * with the tickets currently available but allocated to this server.
              */
 
@@ -444,14 +436,13 @@ public class Server implements Runnable {
             obj.setCurrentTicketEstimation(numAvailable);
 
             // respond to estimator in these steps :
-
             // 1) find out how many available ticket the server have
-
             int availableTicketAllocatedByServer = obj.getAllocatedTickets().size();
 
             // 2) create he msg to send to estimator
             MsgAvailableServer msgAvailableServer = new MsgAvailableServer(obj.id, availableTicketAllocatedByServer);
             var estimatormailbox = obj.coordinator.getEstimatorMailbox();
+
             // 3) send the msg to mailbox of estimator
             estimatormailbox.sendHighPriority(msgAvailableServer);
         }
