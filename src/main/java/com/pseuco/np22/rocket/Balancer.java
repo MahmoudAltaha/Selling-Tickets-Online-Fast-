@@ -1,11 +1,8 @@
 package com.pseuco.np22.rocket;
 
-import java.util.concurrent.locks.ReentrantLock;
-
 import com.pseuco.np22.request.Request;
 import com.pseuco.np22.request.RequestHandler;
 import com.pseuco.np22.request.ServerId;
-import com.pseuco.np22.request.Request.Kind;
 import com.pseuco.np22.rocket.Server.MsgProcessRequest;
 
 /**
@@ -30,8 +27,6 @@ public class Balancer implements RequestHandler {
      * The {@link Coordinator} of the ticket sales system.
      */
     private final Coordinator coordinator;
-
-    private ReentrantLock balancerLock = new ReentrantLock();
 
     /**
      * Constructs a new {@link Balancer}.
@@ -137,8 +132,6 @@ public class Balancer implements RequestHandler {
                     // check if this server is now aktive or terminated
                     ServerId ID_associatedServerKnown = request.getServerId().get();
 
-                    // TODO: Add by Mohamad, you to see editors in calsses Server and coordinator, I gave makr
-                    // with "TODO"
                     boolean isServerStillActive = this.coordinator.getActiveServerIds()
                             .contains(ID_associatedServerKnown);
                     boolean isServerInProcesOfTermination = this.coordinator.getinTerminationServersIDs()

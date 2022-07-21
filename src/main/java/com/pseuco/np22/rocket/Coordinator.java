@@ -308,7 +308,7 @@ public class Coordinator {
     }
 
     /**
-     * TODO : add by Mohamad
+     * 
      * remove the server from the list of inTerminationServersIDs
      * In this way, when the Balancer check if this List have a associated Server,
      * then send the request to this server, other ways send the request to other active

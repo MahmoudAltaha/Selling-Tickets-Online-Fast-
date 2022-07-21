@@ -183,7 +183,6 @@ public class Server implements Runnable {
     /**
      * set the status of the Server to Terminated
      */
-    // TODO: add by Mohamad the line "removefromInTermination"
     // I send all request from Balanacer to the server, except that is terminated
     // so bevor get this thread interupted, I remove this server from "Intermination List"
     // in the coordinator. In this case the balancer send the request to other active server.
@@ -249,7 +248,6 @@ public class Server implements Runnable {
             this.terminateServer();
 
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
 
         }

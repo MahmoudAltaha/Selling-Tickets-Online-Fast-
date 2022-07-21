@@ -101,7 +101,6 @@ public class Estimator implements Runnable {
             try {
                 Thread.sleep((long) millisecondsToSleep);
             } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
