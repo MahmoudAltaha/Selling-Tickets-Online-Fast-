@@ -70,13 +70,11 @@ public class Database {
                 return AllocatedTickets;
                 // if there are tickets in Data Base as I asked
             } else if (numTickets <= this.getNumAvailable()) {
-                System.out.print("Number of oreder from the server : " + numTickets);
                 for (int i = 0; i < numTickets; i++) {
                     ticket = unallocated.remove(0);
                     numAvailable--;
                     AllocatedTickets.add(ticket);
                 }
-                System.out.println("Size of returend List from DB is : " + AllocatedTickets.size());
                 return AllocatedTickets;
                 // if there are tickets but not as I asked
             } else {

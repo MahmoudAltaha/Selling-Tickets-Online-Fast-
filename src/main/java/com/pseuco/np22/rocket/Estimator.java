@@ -2,9 +2,7 @@ package com.pseuco.np22.rocket;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import com.pseuco.np22.request.ServerId;
 import com.pseuco.np22.rocket.Server.MsgTicketsAvailable;
@@ -24,8 +22,6 @@ public class Estimator implements Runnable {
      * The mailbox of the {@link Estimator}.
      */
     private final Mailbox<Command<Estimator>> mailbox = new Mailbox<>();
-
-    private int currentTicketsInSystem = 0;
 
     /**
      * map which contains the serverID and the estimation we got from that server.
@@ -50,23 +46,6 @@ public class Estimator implements Runnable {
         return this.mailbox;
     }
 
-    /**
-     * add the num of tickets of server/DB to the current estimation
-     * 
-     * @param i number of ticket we need to add to the current estimation
-     */
-    private void addToCurrentTicketsEstimation(int i) {
-        this.currentTicketsInSystem = this.currentTicketsInSystem + i;
-    }
-
-    /**
-     * use this methode to reset the estimation befor a new round of collecting info about
-     * tickets
-     */
-    private void resetCurrentTicketInSystem() {
-        this.currentTicketsInSystem = 0;
-    }
-
     @Override
     public void run() {
         /*
@@ -79,7 +58,6 @@ public class Estimator implements Runnable {
             HashMap<ServerId, Server> nonTerminatedServers = new HashMap<>();
             List<ServerId> nonTerminatedServersIds = new ArrayList<>();
             // reset the old estimation.
-            this.resetCurrentTicketInSystem();
             this.serverEstimations.clear();
 
             // check for non terminated servers

@@ -227,19 +227,15 @@ public class Coordinator {
      * @return The number of servers.
      */
     public int scale(int numServers) {
-        System.out.println("scale start");
         this.coordinatorLock.lock();
-        System.out.println("scale start after lock");
         try {
             /*
              * if there are no servers yet created (beginn fo the system) the create the servers
              * according to the giving number.
              */
-            System.out.println("scale start after try");
             if (activeServers.isEmpty()) {
                 for (int i = 0; i < numServers; i++) {
                     createServer();
-                    System.out.println("creat server" + i);
                 }
                 /*
                  * if the number of wished servers are bigger than the current active servers we have then
@@ -249,7 +245,6 @@ public class Coordinator {
                 int numOfServersToCreate = numServers - activeServers.size();
                 for (int i = 0; i < numOfServersToCreate; i++) {
                     createServer();
-                    System.out.println("creat server " + i);
                 }
             }
             /*
@@ -262,7 +257,6 @@ public class Coordinator {
                 int numOfServersToRemove = activeServers.size() - numServers;
                 for (int i = 0; i < numOfServersToRemove; i++) {
                     removeServer(activeServersIDs.remove(0));
-                    System.out.println("removed server " + i);
                 }
             }
             return this.getNumOfServers();
