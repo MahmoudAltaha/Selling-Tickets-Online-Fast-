@@ -15,14 +15,14 @@ public class Mailbox<M> {
     private Queue<M> LowMailBox = new LinkedList<>();
     private Queue<M> HighMailBox = new LinkedList<>();;
     private ReentrantLock MailboxLock;
-    private Condition IsMailboxFreeToAccess;
+    private Condition IsThereMessageToRecev;
 
     /**
      * Constructs a new empty {@link Mailbox}.
      */
     public Mailbox() {
         this.MailboxLock = new ReentrantLock();
-        this.IsMailboxFreeToAccess = MailboxLock.newCondition();
+        this.IsThereMessageToRecev = MailboxLock.newCondition();
     }
 
     /**
@@ -50,7 +50,7 @@ public class Mailbox<M> {
         MailboxLock.lock();
         try {
             boolean messageAdd = LowMailBox.add(message);
-            IsMailboxFreeToAccess.signal();
+            IsThereMessageToRecev.signal();
             return messageAdd;
 
         } finally {
@@ -69,7 +69,7 @@ public class Mailbox<M> {
         MailboxLock.lock();
         try {
             boolean messageAdd = HighMailBox.add(message);
-            IsMailboxFreeToAccess.signal();
+            IsThereMessageToRecev.signal();
             return messageAdd;
 
         } finally {
@@ -94,7 +94,7 @@ public class Mailbox<M> {
         MailboxLock.lock();
         try {
             while ((LowMailBox.isEmpty() && HighMailBox.isEmpty())) {
-                IsMailboxFreeToAccess.await();
+                IsThereMessageToRecev.await();
             }
             M message = null;
 
