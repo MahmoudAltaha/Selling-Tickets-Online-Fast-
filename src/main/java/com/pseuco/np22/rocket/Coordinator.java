@@ -287,7 +287,9 @@ public class Coordinator {
     public List<ServerId> getActiveServerIds() {
         this.coordinatorLock.lock();
         try {
-            return activeServersIDs;
+            List<ServerId> listOfActiveServerIds = new ArrayList<>();
+            listOfActiveServerIds.addAll(activeServersIDs);
+            return listOfActiveServerIds;
         } finally {
             this.coordinatorLock.unlock();
         }
@@ -301,7 +303,9 @@ public class Coordinator {
     public List<ServerId> getinTerminationServersIDs() {
         this.coordinatorLock.lock();
         try {
-            return inTerminationServersIDs;
+            List<ServerId> listOfInTerminationServerIds = new ArrayList<>();
+            listOfInTerminationServerIds.addAll(activeServersIDs);
+            return listOfInTerminationServerIds;
         } finally {
             this.coordinatorLock.unlock();
         }
@@ -340,7 +344,9 @@ public class Coordinator {
     public List<ServerId> getAllServerIds() {
         this.coordinatorLock.lock();
         try {
-            return allServersIDs;
+            List<ServerId> listOfAllServerIds = new ArrayList<>();
+            listOfAllServerIds.addAll(activeServersIDs);
+            return listOfAllServerIds;
         } finally {
             this.coordinatorLock.unlock();
         }
@@ -349,7 +355,9 @@ public class Coordinator {
     public List<ServerId> getTerminatedServerIds() {
         this.coordinatorLock.lock();
         try {
-            return terminatedServerIDs;
+            List<ServerId> listOfTerminatedServerIds = new ArrayList<>();
+            listOfTerminatedServerIds.addAll(activeServersIDs);
+            return listOfTerminatedServerIds;
         } finally {
             this.coordinatorLock.unlock();
         }
