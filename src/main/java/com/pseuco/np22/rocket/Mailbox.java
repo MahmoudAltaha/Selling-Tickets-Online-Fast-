@@ -29,15 +29,10 @@ public class Mailbox<M> {
     private MailboxState mailboxState = MailboxState.OPEN;
 
     /**
-     * mailbox state locks
-     */
-    private ReentrantLock mailboxStateLock = new ReentrantLock();
-
-    /**
      * Check if the Mail Box OPEN
      */
     private boolean isMailboxOpen() {
-        mailboxStateLock.lock();
+        MailboxLock.lock();
         try {
             if (mailboxState.equals(MailboxState.OPEN)) {
                 return true;
@@ -45,7 +40,7 @@ public class Mailbox<M> {
                 return false;
             }
         } finally {
-            mailboxStateLock.unlock();
+            MailboxLock.unlock();
         }
     }
 
@@ -53,11 +48,11 @@ public class Mailbox<M> {
      * Change the state of MailBox to CLOSED
      */
     public void closingMailBox() {
-        mailboxStateLock.lock();
+        MailboxLock.lock();
         try {
             mailboxState = MailboxState.CLOSED;
         } finally {
-            mailboxStateLock.unlock();
+            MailboxLock.unlock();
         }
     }
 
