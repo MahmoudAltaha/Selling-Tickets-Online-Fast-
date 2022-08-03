@@ -191,6 +191,7 @@ public class Server implements Runnable {
         serverStateLock.lock();
         try {
             this.state = ServerState.TERMINATED;
+            this.getMailbox().closingMailBox();
             this.coordinator.addToTerminatedServerIds(this.id);
             this.coordinator.removefromInTermination(this.id);
         } finally {

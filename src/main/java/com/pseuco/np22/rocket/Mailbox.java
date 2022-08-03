@@ -18,6 +18,44 @@ public class Mailbox<M> {
     private Condition IsThereMessageToRecev;
 
     /**
+     * if The server is active or inTermination then it's mailbox should be open otherwise the
+     * mail box is closed
+     */
+    public static enum MailboxState {
+        open,
+        closed,
+    }
+
+    private MailboxState mailboxState = MailboxState.open;
+
+    /**
+     * mailbox state locks
+     */
+    private ReentrantLock mailboxStateLock = new ReentrantLock();
+
+    private boolean isMailboxOpen() {
+        mailboxStateLock.lock();
+        try {
+            if (mailboxState.equals(MailboxState.open)) {
+                return true;
+            } else {
+                return false;
+            }
+        } finally {
+            mailboxStateLock.unlock();
+        }
+    }
+
+    public void closingMailBox() {
+        mailboxStateLock.lock();
+        try {
+            mailboxState = MailboxState.closed;
+        } finally {
+            mailboxStateLock.unlock();
+        }
+    }
+
+    /**
      * Constructs a new empty {@link Mailbox}.
      */
     public Mailbox() {
@@ -49,9 +87,13 @@ public class Mailbox<M> {
     public boolean sendLowPriority(M message) {
         MailboxLock.lock();
         try {
-            boolean messageAdd = LowMailBox.add(message);
-            IsThereMessageToRecev.signal();
-            return messageAdd;
+            if (isMailboxOpen()) {
+                boolean messageAdd = LowMailBox.add(message);
+                IsThereMessageToRecev.signal();
+                return messageAdd;
+            } else {
+                return false;
+            }
 
         } finally {
             MailboxLock.unlock();
@@ -68,10 +110,13 @@ public class Mailbox<M> {
     public boolean sendHighPriority(M message) {
         MailboxLock.lock();
         try {
-            boolean messageAdd = HighMailBox.add(message);
-            IsThereMessageToRecev.signal();
-            return messageAdd;
-
+            if (isMailboxOpen()) {
+                boolean messageAdd = HighMailBox.add(message);
+                IsThereMessageToRecev.signal();
+                return messageAdd;
+            } else {
+                return false;
+            }
         } finally {
             MailboxLock.unlock();
         }
