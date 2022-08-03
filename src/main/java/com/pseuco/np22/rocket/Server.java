@@ -205,8 +205,15 @@ public class Server implements Runnable {
     private void clearReservations() {
         this.reservations.values().removeIf(reservation -> {
             if (reservation.getAge() > this.coordinator.getConfig().getTimeout()) {
-                // Make the ticket available again.
-                this.allocatedTickets.add(reservation.abort());
+                // Make the ticket available again,
+                // BUT I have to check if I return the abort ticket to DB or save it localy
+                if (this.isInTermination()) {
+                    List<Ticket> Tickettolist = new ArrayList<Ticket>();
+                    Tickettolist.add(reservation.abort());
+                    this.coordinator.getDatabase().deallocate(Tickettolist);
+                } else {
+                    this.allocatedTickets.add(reservation.abort());
+                }
                 return true;
             } else {
                 return false;
@@ -233,7 +240,7 @@ public class Server implements Runnable {
             }
             // Start handling the request
             while (keepHandlingMsg) {
-
+                this.clearReservations();
                 Command<Server> message = (Command<Server>) getMailbox().recv();
                 assert (message != null);
                 // make sure that the mailbox did not returns a null msg to avoid calling execute on null
@@ -411,6 +418,7 @@ public class Server implements Runnable {
             }
             // put state of active to false so the termination steps are happining now
             obj.deactivateServer();
+            obj.clearReservations();
 
             // now the server has to complete the request of already reserved tickets ,this all will
             // happen in "execute of msgprocess".
@@ -439,6 +447,7 @@ public class Server implements Runnable {
 
         @Override
         public void execute(Server obj) {
+            obj.clearReservations();
             /**
              * Update the number of available tickets and respond to the estimator
              * with the tickets currently available but allocated to this server.
