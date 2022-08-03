@@ -22,21 +22,24 @@ public class Mailbox<M> {
      * mail box is closed
      */
     public static enum MailboxState {
-        open,
-        closed,
+        OPEN,
+        CLOSED,
     }
 
-    private MailboxState mailboxState = MailboxState.open;
+    private MailboxState mailboxState = MailboxState.OPEN;
 
     /**
      * mailbox state locks
      */
     private ReentrantLock mailboxStateLock = new ReentrantLock();
 
+    /**
+     * Check if the Mail Box OPEN
+     */
     private boolean isMailboxOpen() {
         mailboxStateLock.lock();
         try {
-            if (mailboxState.equals(MailboxState.open)) {
+            if (mailboxState.equals(MailboxState.OPEN)) {
                 return true;
             } else {
                 return false;
@@ -46,10 +49,13 @@ public class Mailbox<M> {
         }
     }
 
+    /**
+     * Change the state of MailBox to CLOSED
+     */
     public void closingMailBox() {
         mailboxStateLock.lock();
         try {
-            mailboxState = MailboxState.closed;
+            mailboxState = MailboxState.CLOSED;
         } finally {
             mailboxStateLock.unlock();
         }

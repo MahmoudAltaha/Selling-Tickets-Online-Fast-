@@ -39,6 +39,26 @@ public class Balancer implements RequestHandler {
         this.coordinator.scale(this.coordinator.getConfig().getInitialServers());
     }
 
+    /**
+     * Get random active server and send message to its Mail Box, indicate if the Message is
+     * sent, otherwise try to get other random active server ...
+     */
+    private void sendMessageToActivServer(Request request) {
+        boolean isItSent = false;
+        while (!isItSent) {
+            // get random server from the list of active servers
+            ServerId associatedServerID = this.coordinator.pickRandomServer();
+            // correlate a customar with specific server
+            request.setServerId(associatedServerID);
+            // constructing MsgProcessRequest with request
+            Command<Server> message = new MsgProcessRequest(request);
+            // get the mail box of this picked server
+            var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
+            // send this message with low priority
+            isItSent = mailBoxOfPickedServer.sendLowPriority(message);
+        }
+    }
+
     @Override
     public void handle(Request request) {
         /*
@@ -141,33 +161,32 @@ public class Balancer implements RequestHandler {
                         Command<Server> message = new MsgProcessRequest(request);
                         var mailBoxOfassociatedServerKnown = this.coordinator
                                 .getServerMailbox(ID_associatedServerKnown);
-                        mailBoxOfassociatedServerKnown.sendLowPriority(message);
+                        boolean isItSent = mailBoxOfassociatedServerKnown.sendLowPriority(message);
+                        /**
+                         * indicate if the message is sent,
+                         * otherwise try to get other random active server
+                         * to handle this request
+                         */
+                        if (!isItSent) {
+                            sendMessageToActivServer(request);
+                        }
                     } else {
-                        // get random server from the list of active servers
-                        ServerId associatedServerID = this.coordinator.pickRandomServer();
-                        // correlate a customar with specific server
-                        request.setServerId(associatedServerID);
-                        // constructing MsgProcessRequest with request
-                        Command<Server> message = new MsgProcessRequest(request);
-                        // get the mail box of this picked server
-                        var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
-                        // send this message with low priority
-                        mailBoxOfPickedServer.sendLowPriority(message);
+                        /**
+                         * In this case the server is terminated, so then obtain a
+                         * random active server to handle this request and be sure
+                         * that the message is sent to Mailbox of activ server
+                         */
+                        sendMessageToActivServer(request);
                     }
-                    // if the rquest of client is new or the previous server is terminated, so then obtain a
-                    // random active server to handle this request
-                    // generally about isPresent etc.
                 } else {
-                    // get random server from the list of active servers
-                    ServerId associatedServerID = this.coordinator.pickRandomServer();
-                    // correlate a customar with specific server
-                    request.setServerId(associatedServerID);
-                    // constructing MsgProcessRequest with request
-                    Command<Server> message = new MsgProcessRequest(request);
-                    // get the mail box of this picked server
-                    var mailBoxOfPickedServer = this.coordinator.getServerMailbox(associatedServerID);
-                    // send this message with low priority
-                    mailBoxOfPickedServer.sendLowPriority(message);
+
+                    /**
+                     * In this case the request of client has no
+                     * connection with any server, so then obtain a
+                     * random active server to handle this request and be sure
+                     * that the message is sent to Mailbox of activ server
+                     */
+                    sendMessageToActivServer(request);
                 }
                 break;
         }
